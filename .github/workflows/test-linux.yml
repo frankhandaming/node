@@ -52,10 +52,6 @@ jobs:
       - name: Environment Information
         run: npx envinfo
       - name: Build
-        run: make build-ci -j4 V=1 CONFIG_FLAGS="--error-on-warn"
+        run: make -C 'dir%20with unusual chars åß∂ƒ©∆¬…' build-ci -j2 V=1 CONFIG_FLAGS="--error-on-warn"
       - name: Test
-        run: make run-ci -j4 V=1 TEST_CI_ARGS="-p actions --node-args='--test-reporter=spec' --node-args='--test-reporter-destination=stdout' --measure-flakiness 9"
-      - name: Re-run test in a folder whose name contains unusual chars
-        run: cd 'dir%20with unusual chars åß∂ƒ©∆¬…' && make build-ci -j2 V=1 CONFIG_FLAGS="--error-on-warn"
-      - name: Test
-        run: cd 'dir%20with unusual chars åß∂ƒ©∆¬…' && make run-ci -j2 V=1 TEST_CI_ARGS="-p actions --measure-flakiness 9"
+        run: make -C 'dir%20with unusual chars åß∂ƒ©∆¬…' run-ci -j2 V=1 TEST_CI_ARGS="-p actions --measure-flakiness 9"
