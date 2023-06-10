@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
         with:
           persist-credentials: false
-          path: "dir%20with weird chars åß∂ƒ©∆¬…"
+          path: "dir%20with unusual chars åß∂ƒ©∆¬…"
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f  # v5.1.1
         with:
@@ -55,3 +55,7 @@ jobs:
         run: make build-ci -j4 V=1 CONFIG_FLAGS="--error-on-warn"
       - name: Test
         run: make run-ci -j4 V=1 TEST_CI_ARGS="-p actions --node-args='--test-reporter=spec' --node-args='--test-reporter-destination=stdout' --measure-flakiness 9"
+      - name: Re-run test in a folder whose name contains unusual chars
+        run: cd 'dir%20with unusual chars åß∂ƒ©∆¬…' && make build-ci -j2 V=1 CONFIG_FLAGS="--error-on-warn"
+      - name: Test
+        run: cd 'dir%20with unusual chars åß∂ƒ©∆¬…' && make run-ci -j2 V=1 TEST_CI_ARGS="-p actions --measure-flakiness 9"
