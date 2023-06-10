@@ -53,6 +53,10 @@ jobs:
         run: npx envinfo
       - name: Build
         run: make -C node build-ci -j2 V=1 CONFIG_FLAGS="--error-on-warn"
-      - run: mv node 'dir%20with unusual chars åß∂ƒ©∆¬…'
       - name: Test
-        run: make -C 'dir%20with unusual chars åß∂ƒ©∆¬…' run-ci -j2 V=1 TEST_CI_ARGS="-p actions --measure-flakiness 9"
+        run: make -C node run-ci -j2 V=1 TEST_CI_ARGS="-p actions --measure-flakiness 9"
+      - name: Re-run test in a folder whose name contains unusual chars
+        run: |
+          mv node 'dir%20with unusual chars åß∂ƒ©∆¬…'
+          cd 'dir%20with unusual chars åß∂ƒ©∆¬…'
+          ./tools/test.py --flaky-tests keep_retrying -p actions -j 2
