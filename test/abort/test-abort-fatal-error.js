@@ -27,7 +27,7 @@ if (common.isWindows)
 const assert = require('assert');
 const exec = require('child_process').exec;
 
-let cmdline = `ulimit -c 0; ${process.execPath}`;
+let cmdline = `ulimit -c 0; ${JSON.stringify(process.execPath)}`;
 cmdline += ' --max-old-space-size=16 --max-semi-space-size=4';
 cmdline += ' -e "a = []; for (i = 0; i < 1e9; i++) { a.push({}) }"';
 
