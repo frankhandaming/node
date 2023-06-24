@@ -43,7 +43,7 @@ const filename = fixtures.path('readfile_pipe_test.txt');
 const dataExpected = fs.readFileSync(filename).toString();
 
 const exec = require('child_process').exec;
-const cmd = '"$NODE" "$FILE" child < "TMP_FILE"';
+const cmd = '"$NODE" "$FILE" child < "$TMP_FILE"';
 exec(cmd, {
   env: { NODE: process.execPath, FILE: __filename, TMP_FILE: filename }
 }, common.mustSucceed((stdout, stderr) => {
