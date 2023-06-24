@@ -29,8 +29,8 @@ const syntaxErrorRE = /^SyntaxError: \b/m;
   // Loop each possible option, `-c` or `--check`
   syntaxArgs.forEach(function(args) {
     const _args = args.concat(file);
-    const cmd = [node, ..._args].join(' ');
-    exec(cmd, common.mustCall((err, stdout, stderr) => {
+    const cmd = ['"$NODE"', ..._args].join(' ');
+    exec(cmd, { env: { NODE: node } }, common.mustCall((err, stdout, stderr) => {
       assert.strictEqual(err instanceof Error, true);
       assert.strictEqual(err.code, 1,
                          `code ${err.code} !== 1 for error:\n\n${err}`);

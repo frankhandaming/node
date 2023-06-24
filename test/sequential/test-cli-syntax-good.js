@@ -28,8 +28,8 @@ const syntaxArgs = [
   syntaxArgs.forEach(function(args) {
     const _args = args.concat(file);
 
-    const cmd = [node, ..._args].join(' ');
-    exec(cmd, common.mustCall((err, stdout, stderr) => {
+    const cmd = ['"$NODE"', ..._args].join(' ');
+    exec(cmd, { env: { NODE: node } }, common.mustCall((err, stdout, stderr) => {
       if (err) {
         console.log('-- stdout --');
         console.log(stdout);

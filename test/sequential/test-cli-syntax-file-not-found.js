@@ -25,8 +25,8 @@ const notFoundRE = /^Error: Cannot find module/m;
   // Loop each possible option, `-c` or `--check`
   syntaxArgs.forEach(function(args) {
     const _args = args.concat(file);
-    const cmd = [node, ..._args].join(' ');
-    exec(cmd, common.mustCall((err, stdout, stderr) => {
+    const cmd = ['"$NODE"', ..._args].join(' ');
+    exec(cmd, { env: { NODE: node } }, common.mustCall((err, stdout, stderr) => {
       // No stdout should be produced
       assert.strictEqual(stdout, '');
 

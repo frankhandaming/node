@@ -54,8 +54,8 @@ let caught = false;
 let ret, err;
 const start = Date.now();
 try {
-  const cmd = `"${process.execPath}" -e "setTimeout(function(){}, ${SLEEP});"`;
-  ret = execSync(cmd, { timeout: TIMER });
+  const cmd = `"$NODE" -e "setTimeout(function(){}, ${SLEEP});"`;
+  ret = execSync(cmd, { env: { NODE: process.execPath }, timeout: TIMER });
 } catch (e) {
   caught = true;
   assert.strictEqual(getSystemErrorName(e.errno), 'ETIMEDOUT');
@@ -78,16 +78,16 @@ const msgBuf = Buffer.from(`${msg}\n`);
 
 // console.log ends every line with just '\n', even on Windows.
 
-const cmd = `"${process.execPath}" -e "console.log('${msg}');"`;
+const cmd = `"$NODE" -e 'console.log(${JSON.stringify(msg)})'`;
 
 {
-  const ret = execSync(cmd);
+  const ret = execSync(cmd, { env: { NODE: process.execPath } });
   assert.strictEqual(ret.length, msgBuf.length);
   assert.deepStrictEqual(ret, msgBuf);
 }
 
 {
-  const ret = execSync(cmd, { encoding: 'utf8' });
+  const ret = execSync(cmd, { encoding: 'utf8', env: { NODE: process.execPath } });
   assert.strictEqual(ret, `${msg}\n`);
 }
 
