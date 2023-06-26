@@ -63,5 +63,5 @@ function handleExit(error, stdout, stderr) {
 
   assert.strictEqual(code, 0, `npm install got error code ${code}`);
   assert.strictEqual(signalCode, null, `unexpected signal: ${signalCode}`);
-  assert(fs.existsSync(`${installDir}/node_modules/package-name`));
+  assert(fs.existsSync(path.join(installDir, 'node_modules/package-name')));
 }

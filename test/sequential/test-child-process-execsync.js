@@ -38,7 +38,7 @@ if (common.isWindows) {
   SLEEP = 10000;
 }
 
-const execOpts = { encoding: 'utf8', shell: true };
+const execOpts = { encoding: 'utf8', shell: true, env: { NODE: process.execPath } };
 
 // Verify that stderr is not accessed when a bad shell is used
 assert.throws(
@@ -156,4 +156,4 @@ const args = [
 }
 
 // Verify the shell option works properly
-execFileSync(process.execPath, [], execOpts);
+execFileSync('"$NODE"', [], execOpts);
