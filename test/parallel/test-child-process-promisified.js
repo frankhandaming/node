@@ -8,7 +8,7 @@ const exec = promisify(child_process.exec);
 const execFile = promisify(child_process.execFile);
 
 {
-  const promise = exec(`${process.execPath} -p 42`);
+  const promise = exec('"$NODE" -p 42', { env: { NODE: process.execPath } });
 
   assert(promise.child instanceof child_process.ChildProcess);
   promise.then(common.mustCall((obj) => {

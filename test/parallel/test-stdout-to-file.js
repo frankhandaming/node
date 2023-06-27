@@ -13,8 +13,7 @@ const tmpFile = tmpdir.resolve('stdout.txt');
 tmpdir.refresh();
 
 function test(size, useBuffer, cb) {
-  const cmd = `"$NODE" "${
-    useBuffer ? scriptBuffer : scriptString}" ${size} > "${tmpFile}"`;
+  const cmd = `"$NODE" "$SCRIPT" ${size} > "$TMP_FILE"`;
 
   try {
     fs.unlinkSync(tmpFile);
@@ -24,7 +23,11 @@ function test(size, useBuffer, cb) {
 
   console.log(`${size} chars to ${tmpFile}...`);
 
-  childProcess.exec(cmd, { env: { NODE: process.execPath } }, common.mustSucceed(() => {
+  childProcess.exec(cmd, { env: {
+    NODE: process.execPath,
+    SCRIPT: useBuffer ? scriptBuffer : scriptString,
+    TMP_FILE: tmpFile,
+  } }, common.mustSucceed(() => {
     console.log('done!');
 
     const stat = fs.statSync(tmpFile);
