@@ -66,7 +66,7 @@ const allRegExpStatics =
   assert.strictEqual(child.signal, null);
 }
 
-{
+if (!common.isInsideCWDWithUnusualChars) {
   const child = spawn(process.execPath, [], { stdio: ['pipe', 'pipe', 'inherit'], encoding: 'utf8' });
 
   let stdout = '';

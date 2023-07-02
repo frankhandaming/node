@@ -1151,6 +1151,15 @@ const common = {
   get checkoutEOL() {
     return fs.readFileSync(__filename).includes('\r\n') ? '\r\n' : '\n';
   },
+
+  get isInsideCWDWithUnusualChars() {
+    const cwd = process.cwd();
+    return cwd.includes('%') ||
+           (!isWindows && cwd.includes('\\')) ||
+           cwd.includes('\n') ||
+           cwd.includes('\r') ||
+           cwd.includes('\t');
+  },
 };
 
 const validProperties = new Set(Object.keys(common));
