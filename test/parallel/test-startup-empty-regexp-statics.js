@@ -1,6 +1,11 @@
 'use strict';
 
 const common = require('../common');
+
+if (common.isInsideCWDWithUnusualChars) {
+  common.skip('expected failure');
+}
+
 const assert = require('node:assert');
 const { spawnSync, spawn } = require('node:child_process');
 
