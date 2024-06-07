@@ -528,7 +528,7 @@ test-all: test-build ## Run default tests with both Debug and Release builds.
 test-all-valgrind: test-build ## Test all valgrind tests
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=debug,release --valgrind
 
-.PHONY: test-all-suites ## Run all test suites.
+.PHONY: test-all-suites
 test-all-suites: | clear-stalled test-build bench-addons-build doc-only ## Run all test suites.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=$(BUILDTYPE_LOWER) test/*
 
