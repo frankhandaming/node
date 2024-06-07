@@ -118,8 +118,8 @@ endif
 # To add a target to the help, add a double comment (##) on the target line.
 help: ## Print help for targets with comments.
 	@printf "For more targets and info see the comments in the Makefile.\n\n"
-	@grep -E '^[^ :]+:.*##'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 3- -d'#')\n"; done
-
+	@grep -E '^[[:alnum:]._-]+:.*?## .*$$' Makefile | sort | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 # The .PHONY is needed to ensure that we recursively use the out/Makefile
 # to check for changes.
 .PHONY: $(NODE_EXE) $(NODE_G_EXE)
@@ -758,8 +758,8 @@ tools/doc/node_modules: tools/doc/package.json
 	fi
 
 .PHONY: doc-only
-doc-only: tools/doc/node_modules \ ## Builds the docs with the local or the global Node.js binary.
-	$(apidoc_dirs) $(apiassets)
+doc-only: tools/doc/node_modules \
+	$(apidoc_dirs) $(apiassets) ## Builds the docs with the local or the global Node.js binary.
 	@if [ "$(shell $(node_use_openssl))" != "true" ]; then \
 		echo "Skipping doc-only (no crypto)"; \
 	else \
