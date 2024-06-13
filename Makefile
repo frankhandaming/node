@@ -362,7 +362,7 @@ test-cov: all ## Runs coverage tests.
 	CI_SKIP_TESTS=$(COV_SKIP_TESTS) $(MAKE) jstest
 
 .PHONY: test-valgrind
-test-valgrind: all ## Runs valgrind tests.
+test-valgrind: all ## Runs tests using valgrind.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=$(BUILDTYPE_LOWER) --valgrind sequential parallel message
 
 .PHONY: test-check-deopts
@@ -526,7 +526,7 @@ test-all: test-build ## Run default tests with both Debug and Release builds.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=debug,release
 
 .PHONY: test-all-valgrind
-test-all-valgrind: test-build ## Test all valgrind tests
+test-all-valgrind: test-build ## Run all tests using valgrind.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=debug,release --valgrind
 
 .PHONY: test-all-suites
