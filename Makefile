@@ -120,6 +120,7 @@ help: ## Print help for targets with comments.
 	@printf "For more targets and info see the comments in the Makefile.\n\n"
 	@grep -E '^[[:alnum:]._-]+:.*?## .*$$' Makefile | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+
 # The .PHONY is needed to ensure that we recursively use the out/Makefile
 # to check for changes.
 .PHONY: $(NODE_EXE) $(NODE_G_EXE)
@@ -287,7 +288,7 @@ coverage-test: coverage-build ## Run the tests and generate a coverage report.
 		| sed 's/<[^>]*>//g'| sed 's/ //g'
 
 .PHONY: coverage-report-js
-coverage-report-js: ## Report JavaScript coverage results
+coverage-report-js: ## Report JavaScript coverage results.
 	-$(MAKE) coverage-build-js
 	$(NODE) ./node_modules/.bin/c8 report
 
@@ -313,7 +314,7 @@ v8: ## Builds deps/v8.
 		tools/make-v8.sh $(V8_ARCH).$(BUILDTYPE_LOWER) $(V8_BUILD_OPTIONS)
 
 .PHONY: jstest
-jstest: build-addons build-js-native-api-tests build-node-api-tests ## Runs addon tests and JS tests
+jstest: build-addons build-js-native-api-tests build-node-api-tests ## Runs addon tests and JS tests.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=$(BUILDTYPE_LOWER) \
 		$(TEST_CI_ARGS) \
 		--skip-tests=$(CI_SKIP_TESTS) \
@@ -353,7 +354,7 @@ test-only: all  ## For a quick test, does not run linter or build docs.
 
 # Used by `make coverage-test`
 .PHONY: test-cov
-test-cov: all ## Runs coverage tests
+test-cov: all ## Runs coverage tests.
 	$(MAKE) build-addons
 	$(MAKE) build-js-native-api-tests
 	$(MAKE) build-node-api-tests
@@ -361,7 +362,7 @@ test-cov: all ## Runs coverage tests
 	CI_SKIP_TESTS=$(COV_SKIP_TESTS) $(MAKE) jstest
 
 .PHONY: test-valgrind
-test-valgrind: all ## Runs valgrind tests
+test-valgrind: all ## Runs valgrind tests.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) --mode=$(BUILDTYPE_LOWER) --valgrind sequential parallel message
 
 .PHONY: test-check-deopts
@@ -546,7 +547,7 @@ endif
 .PHONY: test-ci-native
 
 # Related CI job: node-test-commit-arm-fanned
-test-ci-native: LOGLEVEL := info ## Build and test addons without building anything else
+test-ci-native: LOGLEVEL := info ## Build and test addons without building anything else.
 test-ci-native: | benchmark/napi/.buildstamp test/addons/.buildstamp test/js-native-api/.buildstamp test/node-api/.buildstamp
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
 		--mode=$(BUILDTYPE_LOWER) --flaky-tests=$(FLAKY_TESTS) \
@@ -555,7 +556,7 @@ test-ci-native: | benchmark/napi/.buildstamp test/addons/.buildstamp test/js-nat
 .PHONY: test-ci-js
 # This target should not use a native compiler at all
 # Related CI job: node-test-commit-arm-fanned
-test-ci-js: | clear-stalled ## Build and test JavaScript with building anything else
+test-ci-js: | clear-stalled ## Build and test JavaScript with building anything else.
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
 		--mode=$(BUILDTYPE_LOWER) --flaky-tests=$(FLAKY_TESTS) \
 		--skip-tests=$(CI_SKIP_TESTS) \
@@ -569,7 +570,7 @@ test-ci-js: | clear-stalled ## Build and test JavaScript with building anything 
 
 .PHONY: test-ci
 # Related CI jobs: most CI tests, excluding node-test-commit-arm-fanned
-test-ci: LOGLEVEL := info ## Build and test everything (in CI)
+test-ci: LOGLEVEL := info ## Build and test everything (in CI).
 test-ci: | clear-stalled bench-addons-build build-addons build-js-native-api-tests build-node-api-tests doc-only
 	out/Release/cctest --gtest_output=xml:out/junit/cctest.xml
 	$(PYTHON) tools/test.py $(PARALLEL_ARGS) -p tap --logfile test.tap \
@@ -586,7 +587,7 @@ test-ci: | clear-stalled bench-addons-build build-addons build-js-native-api-tes
 .PHONY: build-ci
 # Prepare the build for running the tests.
 # Related CI jobs: most CI tests, excluding node-test-commit-arm-fanned
-build-ci: ## Build everything for CI
+build-ci: ## Build everything for CI.
 	$(PYTHON) ./configure --verbose $(CONFIG_FLAGS)
 	$(MAKE)
 
@@ -600,7 +601,7 @@ build-ci: ## Build everything for CI
 #
 # Using -j1 as the sub target in `test-ci` already have internal parallelism.
 # Refs: https://github.com/nodejs/node/pull/23733
-run-ci: build-ci ## Build and run all tests for CI
+run-ci: build-ci ## Build and run all tests for CI.
 	$(MAKE) test-ci -j1
 
 .PHONY: test-release
@@ -692,7 +693,7 @@ test-addons-clean: ## Remove addon testing artifacts.
 	$(MAKE) test-node-api-clean
 
 .PHONY: test-with-async-hooks
-test-with-async-hooks: all ## Run tests with async hooks.
+test-with-async-hooks: ## Run tests with async hooks.
 	$(MAKE) build-addons
 	$(MAKE) build-js-native-api-tests
 	$(MAKE) build-node-api-tests
@@ -1484,7 +1485,7 @@ CLANG_FORMAT_START ?= HEAD
 #  $ CLANG_FORMAT_START=`git rev-parse HEAD~1` make format-cpp
 # To format diff between main and current branch head (main...HEAD):
 #  $ CLANG_FORMAT_START=main make format-cpp
-format-cpp: ## Format C++ diff from $CLANG_FORMAT_START to current changes
+format-cpp: ## Format C++ diff from $CLANG_FORMAT_START to current changes.
 ifneq ("","$(wildcard tools/clang-format/node_modules/)")
 	$(info Formatting C++ diff from $(CLANG_FORMAT_START)..)
 	@$(PYTHON) tools/clang-format/node_modules/.bin/git-clang-format \
@@ -1602,7 +1603,7 @@ DOCKER_COMMAND ?= docker run -it -v $(PWD):/node
 IS_IN_WORKTREE = $(shell grep '^gitdir: ' $(PWD)/.git 2>/dev/null)
 GIT_WORKTREE_COMMON = $(shell git rev-parse --git-common-dir)
 DOCKER_COMMAND += $(if $(IS_IN_WORKTREE), -v $(GIT_WORKTREE_COMMON):$(GIT_WORKTREE_COMMON))
-gen-openssl: ## Generate platform dependent openssl files (requires docker)
+gen-openssl: ## Generate platform dependent openssl files (requires docker).
 	docker build -t node-openssl-builder deps/openssl/config/
 	$(DOCKER_COMMAND) node-openssl-builder make -C deps/openssl/config
 else
