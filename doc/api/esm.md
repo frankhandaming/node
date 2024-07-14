@@ -487,8 +487,8 @@ changes:
 CommonJS modules consist of a `module.exports` object which can be of any type.
 
 To support this, when importing CommonJS from an ECMAScript module, a namespace
-wrapper for the CommonJS module is constructed, which always provides `default`
-export key pointing to the CommonJS `module.exports` value.
+wrapper for the CommonJS module is constructed, which always provides a
+`default` export key pointing to the CommonJS `module.exports` value.
 
 In addition, a heuristic static analysis is performed against the source text of
 the CommonJS module to get a best-effort static list of exports to provide on
