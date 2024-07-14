@@ -201,10 +201,9 @@ export function distance(a, b) { return (b.x - a.x) ** 2 + (b.y - a.y) ** 2; }
 
 ```mjs
 // point.mjs
-class Point {
+export default class Point {
   constructor(x, y) { this.x = x; this.y = y; }
 }
-export default Point;
 ```
 
 A CommonJS module can load them with `require()` under `--experimental-detect-module`:
@@ -232,6 +231,56 @@ ES Modules. If the namespace already defines `__esModule`, this would not be add
 This property is experimental and can change in the future. It should only be used
 by tools converting ES modules into CommonJS modules, following existing ecosystem
 conventions. Code authored directly in CommonJS should avoid depending on it.
+
+To create an ESM module that should provide an arbitrary value to CommonJS, the
+`__cjsUnwrapDefault: true` marker can be used instead:
+
+```mjs
+// point.mjs
+export default class Point {
+  constructor(x, y) { this.x = x; this.y = y; }
+}
+
+// `distance` is lost to CommonJS consumers of this module, unless it's
+// added to `Point` as a static property.
+export function distance(a, b) { return (b.x - a.x) ** 2 + (b.y - a.y) ** 2; }
+export const __cjsUnwrapDefault = true;
+```
+
+```cjs
+const Point = require('./point.mjs');
+console.log(Point); // [class Point]
+
+// Named exports are lost when __cjsUnwrapDefault is used
+const { distance } = require('./point.mjs');
+console.log(distance); // undefined
+```
+
+Notice in the example above, when `__cjsUnwrapDefault` is used, named exports will be
+lost to CommonJS consumers. To allow  CommonJS consumers to continue accessing
+named exports, the module can make sure that the default export is an object with the
+named exports attached to it as properties. For example with the example above,
+`distance` can be attached to the default export, the `Point` class, as a static method.
+
+```mjs
+export function distance(a, b) { return (b.x - a.x) ** 2 + (b.y - a.y) ** 2; }
+
+export default class Point {
+  constructor(x, y) { this.x = x; this.y = y; }
+  static distance = distance;
+}
+
+export const __cjsUnwrapDefault = true;
+```
+
+```cjs
+const Point = require('./point.mjs');
+console.log(Point); // [class Point]
+
+const { distance } = require('./point.mjs');
+console.log(distance); // [Function: distance]
+```
+
 
 If the module being `require()`'d contains top-level `await`, or the module
 graph it `import`s contains top-level `await`,
