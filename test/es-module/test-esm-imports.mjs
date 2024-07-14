@@ -9,8 +9,8 @@ const { requireImport, importImport } = importer;
 [requireImport, importImport].forEach((loadFixture) => {
   const isRequire = loadFixture === requireImport;
 
-  const maybeWrapped = (exports) => isRequire ? exports :
-    { ...exports, __cjsModule: true };
+  const maybeWrapped = ((exports) => isRequire ? exports :
+    { ...exports, __cjsModule: true });
 
   const internalImports = new Map([
     // Base case

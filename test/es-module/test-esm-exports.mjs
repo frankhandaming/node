@@ -8,8 +8,8 @@ import fromInside from '../fixtures/node_modules/pkgexports/lib/hole.js';
 [requireFixture, importFixture].forEach((loadFixture) => {
   const isRequire = loadFixture === requireFixture;
 
-  const maybeWrapped = (exports) => isRequire ? exports :
-    { ...exports, __cjsModule: true };
+  const maybeWrapped = (exports) => (isRequire ? exports :
+    { ...exports, __cjsModule: true });
 
   const validSpecifiers = new Map([
     // A simple mapping of a path.
@@ -54,7 +54,7 @@ import fromInside from '../fixtures/node_modules/pkgexports/lib/hole.js';
     ['pkgexports/sub/////internal/////test.js', maybeWrapped({ default: 'internal only' })],
     // trailing slash
     ['pkgexports/trailing-pattern-slash/',
-      maybeWrapped({ default: 'trailing-pattern-slash' })],
+     maybeWrapped({ default: 'trailing-pattern-slash' })],
   ]);
 
   if (!isRequire) {
@@ -218,8 +218,8 @@ import fromInside from '../fixtures/node_modules/pkgexports/lib/hole.js';
 const { requireFromInside, importFromInside } = fromInside;
 [importFromInside, requireFromInside].forEach((loadFromInside) => {
   const isRequire = loadFromInside === requireFromInside;
-  const maybeWrapped = (exports) => isRequire ? exports :
-      { ...exports, __cjsModule: true };
+  const maybeWrapped = (exports) => (isRequire ? exports :
+    { ...exports, __cjsModule: true });
 
   const validSpecifiers = new Map([
     // A file not visible from outside of the package
