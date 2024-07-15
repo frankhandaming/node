@@ -235,7 +235,6 @@ conventions. Code authored directly in CommonJS should avoid depending on it.
 To create an ESM module that should provide an arbitrary value to CommonJS, the
 `__cjsModule: true` marker can be used instead:
 
-
 ```mjs
 // point.mjs
 export default class Point {
