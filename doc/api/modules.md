@@ -239,7 +239,7 @@ To create an ESM module that should provide an arbitrary value to CommonJS, the
 ```mjs
 // point.mjs
 export default class Point {
-  constructor(c, x) { this.x = x; this.y = y }
+  constructor(c, x) { this.x = x; this.y = y; }
 }
 export const __cjsModule = true;
 ```
