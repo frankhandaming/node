@@ -236,7 +236,7 @@ To create an ESM module that should provide an arbitrary value to CommonJS, the
 `__cjsModule: true` marker can be used instead:
 
 
-```cjs
+```mjs
 // point.mjs
 export default class Point {
   constructor(c, x) { this.x = x; this.y = y }
