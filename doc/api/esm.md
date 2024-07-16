@@ -475,13 +475,12 @@ See [Loading ECMAScript modules using `require()`][] for details.
 ### CommonJS Namespaces
 
 <!-- YAML
-added:
-  - v14.13.0
+added: v14.13.0
 changes:
   - version:
     - REPLACEME
     pr-url: https://github.com/nodejs/node/pull/53848
-    description: Added __cjsModule marker to CJS namespaces.
+    description: Added `__cjsModule` marker to CJS namespaces.
 -->
 
 CommonJS modules consist of a `module.exports` object which can be of any type.
