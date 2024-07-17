@@ -1,9 +1,12 @@
 // Flags: --experimental-sqlite
 'use strict';
 const { spawnPromisified } = require('../common');
+const assert = require('node:assert');
 const tmpdir = require('../common/tmpdir');
 const { existsSync } = require('node:fs');
 const { join } = require('node:path');
+const os = require('node:os');
+const { path } = require('../common/fixtures');
 const { DatabaseSync, StatementSync } = require('node:sqlite');
 const { suite, test } = require('node:test');
 let cnt = 0;
@@ -77,6 +80,93 @@ suite('DatabaseSync() constructor', () => {
       code: 'ERR_INVALID_ARG_TYPE',
       message: /The "options\.open" argument must be a boolean/,
     });
+  });
+
+  test('throws if options.allowLoadExtension is provided but is not a boolean', (t) => {
+    t.assert.throws(() => {
+      new DatabaseSync('foo', { allowLoadExtension: 5 });
+    }, {
+      code: 'ERR_INVALID_ARG_TYPE',
+      message: /The "options\.allowLoadExtension" argument must be a boolean/,
+    });
+  });
+});
+
+suite('DatabaseSync.prototype.loadExtension()', () => {
+  test('throws if database is not open', (t) => {
+    const db = new DatabaseSync(nextDb(), { open: false });
+    t.assert.throws(() => {
+      db.loadExtension();
+    }, {
+      code: 'ERR_INVALID_STATE',
+      message: /database is not open/,
+    });
+  });
+
+  test('throws if path is not a valid sqlite extension', (t) => {
+    const db = new DatabaseSync(nextDb(), {
+      allowLoadExtension: true,
+    });
+    // Try to load a non-existent file
+    const files = [
+      '/dev/null',
+      path('a.js'),
+      path('shared-memory.wasm'),
+      path('crash.wat'),
+      path('doc_inc_1.md'),
+      path('utf8-bom.json'),
+      path('x.txt'),
+    ];
+    for (const file of files) {
+      t.assert.throws(() => {
+        db.loadExtension(file);
+      }, {
+        code: 'ERR_LOAD_SQLITE_EXTENSION',
+      }, `loadExtension("${file}") should throw an error`);
+    }
+  });
+
+  test('should load sqlite extension successfully', (t) => {
+    const dbPath = nextDb();
+    const db = new DatabaseSync(dbPath, { allowLoadExtension: true });
+    const supportedPlatforms = [
+      ['macos', 'x86_64'],
+      ['windows', 'x86_64'],
+      ['linux', 'x86_64'],
+      ['macos', 'aarch64'],
+    ];
+    function validPlatform(platform, arch) {
+      return (
+        supportedPlatforms.find(([p, a]) => platform === p && arch === a) !== null
+      );
+    }
+
+    function getExtension(platform, arch) {
+      switch (platform) {
+        case 'darwin':
+          return arch === 'arm64' ? '.aarch64.dylib' : '.x86_64.dylib';
+        case 'windows':
+          return '.dll';
+        case 'linux':
+          return '.so';
+        default:
+          return null;
+      }
+    }
+    const platform = os.platform();
+    const arch = process.arch;
+    if (!validPlatform(platform, arch)) {
+      t.skip('Unsupported platform');
+      return;
+    }
+    const ext = getExtension(platform, arch);
+    const filePath = path('sqlite', `sample${ext}`);
+    t.assert.strictEqual(db.loadExtension(filePath), undefined);
+
+    const { noop } = db.prepare(
+      'select noop(1) as noop;'
+    ).get();
+    assert.strictEqual(noop, 1);
   });
 });
 
