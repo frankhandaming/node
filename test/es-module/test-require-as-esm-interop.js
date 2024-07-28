@@ -11,7 +11,7 @@ const assert = require('assert');
   assert.strictEqual(require('../fixtures/cjsesm/dep.js'), 'cjs');
   assert.strictEqual(require('../fixtures/cjsesm/index.js'), 'cjs');
 
-  // Now we have ESM conversions of these dependencies, using __cjsModule, 
+  // Now we have ESM conversions of these dependencies, using __cjsModule,
   // that behave equivalently under require(esm) despite the custom string import:
   assert.strictEqual(require('../fixtures/cjsesm/dep.mjs'), 'cjs');
   assert.strictEqual(require('../fixtures/cjsesm/index.mjs'), 'cjs');
