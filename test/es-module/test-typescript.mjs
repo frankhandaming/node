@@ -203,7 +203,7 @@ test('execute a TypeScript file with CommonJS syntax requiring .mts', async () =
   strictEqual(result.code, 1);
 });
 
-test('execute a TypeScript file with CommonJS syntax requiring .mts with require-module', async () => {
+test('execute a TypeScript file with CommonJS syntax requiring .mts using require-module', async () => {
   const result = await spawnPromisified(process.execPath, [
     '--experimental-strip-types',
     '--experimental-require-module',
@@ -215,7 +215,7 @@ test('execute a TypeScript file with CommonJS syntax requiring .mts with require
   strictEqual(result.code, 0);
 });
 
-test('execute a TypeScript file with CommonJS syntax requiring .mts with require-module', async () => {
+test('execute a TypeScript file with CommonJS syntax requiring .cts using commonjs', async () => {
   const result = await spawnPromisified(process.execPath, [
     '--experimental-strip-types',
     '--experimental-default-type=commonjs',

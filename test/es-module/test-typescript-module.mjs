@@ -42,7 +42,6 @@ test('execute an .mts file importing a .cts file', async () => {
   const result = await spawnPromisified(process.execPath, [
     '--experimental-strip-types',
     '--no-warnings',
-    '--no-warnings',
     fixtures.path('typescript/mts/test-import-commonjs.mts'),
   ]);
 
