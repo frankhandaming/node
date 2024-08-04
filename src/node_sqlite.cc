@@ -768,6 +768,7 @@ Local<FunctionTemplate> StatementSync::GetConstructorTemplate(
     tmpl->SetClassName(FIXED_ONE_BYTE_STRING(isolate, "StatementSync"));
     tmpl->InstanceTemplate()->SetInternalFieldCount(
         StatementSync::kInternalFieldCount);
+    SetProtoMethod(isolate, tmpl, "iterate", StatementSync::Iterate);
     SetProtoMethod(isolate, tmpl, "all", StatementSync::All);
     SetProtoMethod(isolate, tmpl, "get", StatementSync::Get);
     SetProtoMethod(isolate, tmpl, "run", StatementSync::Run);
