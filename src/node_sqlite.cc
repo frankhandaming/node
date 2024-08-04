@@ -506,10 +506,6 @@ void StatementSync::All(const FunctionCallbackInfo<Value>& args) {
   args.GetReturnValue().Set(Array::New(isolate, rows.data(), rows.size()));
 }
 
-void IteratorFunc(const v8::FunctionCallbackInfo<v8::Value>& info) {
-  info.GetReturnValue().Set(info.Holder());
-}
-
 struct IterateCaptureContext {
   int num_cols;
   StatementSync* stmt;
@@ -582,13 +578,11 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
     v8::External::New(isolate, captureContext)
   );
 
-  v8::Local<v8::FunctionTemplate> iteratorFuncTemplate = v8::FunctionTemplate::New(isolate, IteratorFunc);
   iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "next"), nextFuncTemplate);
-  iterableIteratorTemplate->Set(v8::Symbol::GetIterator(isolate), iteratorFuncTemplate);
 
-  v8::Local<v8::Value> iteratorPrototype = context->Global()->Get(context, String::NewFromUtf8Literal(isolate, "Iterator.prototype")).ToLocalChecked();
-  v8::Local<v8::Object> iterableIterator = iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
-  iterableIterator->SetPrototype(context, iteratorPrototype).ToChecked();
+  auto iterableIterator = iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
+  auto JSIteratorPrototype = context->Global()->Get(context, String::NewFromUtf8Literal(isolate, "Iterator.prototype")).ToLocalChecked();
+  iterableIterator->SetPrototype(context, JSIteratorPrototype).Check();
 
   args.GetReturnValue().Set(iterableIterator);
 }
