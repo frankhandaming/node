@@ -584,7 +584,7 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
 
   v8::Local<v8::FunctionTemplate> iteratorFuncTemplate = v8::FunctionTemplate::New(isolate, IteratorFunc);
   iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "next"), nextFuncTemplate);
-  iterableIteratorTemplate->Set(v8::Symbol::GetIterator(isolate), iteratorFuncTemplate->GetFunction(context).ToLocalChecked());
+  iterableIteratorTemplate->Set(v8::Symbol::GetIterator(isolate), iteratorFuncTemplate);
 
   v8::Local<v8::Value> iteratorPrototype = context->Global()->Get(context, String::NewFromUtf8Literal(isolate, "Iterator.prototype")).ToLocalChecked();
   v8::Local<v8::Object> iterableIterator = iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
