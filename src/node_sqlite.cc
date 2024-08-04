@@ -506,6 +506,86 @@ void StatementSync::All(const FunctionCallbackInfo<Value>& args) {
   args.GetReturnValue().Set(Array::New(isolate, rows.data(), rows.size()));
 }
 
+void IteratorFunc(const v8::FunctionCallbackInfo<v8::Value>& info) {
+  info.GetReturnValue().Set(info.Holder());
+}
+
+void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
+  StatementSync* stmt;
+  ASSIGN_OR_RETURN_UNWRAP(&stmt, args.This());
+  Environment* env = Environment::GetCurrent(args);
+  auto isolate = env->isolate();
+  auto context = env->context();
+  int r = sqlite3_reset(stmt->statement_);
+  CHECK_ERROR_OR_THROW(isolate, stmt->db_, r, SQLITE_OK, void());
+
+  if (!stmt->BindParams(args)) {
+    return;
+  }
+
+  // auto reset = OnScopeLeave([&]() { sqlite3_reset(stmt->statement_); });
+
+  v8::Local<v8::ObjectTemplate> iterableIteratorTemplate = v8::ObjectTemplate::New(isolate);
+
+  v8::Local<v8::FunctionTemplate> nextFuncTemplate = v8::FunctionTemplate::NewWithCache(
+    isolate,
+    [](const v8::FunctionCallbackInfo<v8::Value>& info) {
+      auto cache = info.Data().As<std::pair<StatementSync*, std::pair<Environment*, int>*>>();
+      auto stmt = cache->first;
+      auto env = cache->second->first;
+      auto num_cols = cache->second->second;
+
+      auto isolate = env->isolate();
+      auto context = env->context();
+
+      int r = sqlite3_step(stmt->statement_);
+      if (r != SQLITE_ROW) {
+        CHECK_ERROR_OR_THROW(isolate, stmt->db_, r, SQLITE_DONE, void());
+        Local<Object> result = Object::New(isolate);
+        result->Set(context, String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, true)).Check();
+        result->Set(context, String::NewFromUtf8Literal(isolate, "value"), v8::Null(isolate)).Check();
+
+        info.GetReturnValue().Set(result);
+        return;
+      }
+
+      Local<Object> row = Object::New(isolate);
+
+      for (int i = 0; i < num_cols; ++i) {
+        Local<Value> key = stmt->ColumnNameToValue(i);
+        if (key.IsEmpty()) return;
+        Local<Value> val = stmt->ColumnToValue(i);
+        if (val.IsEmpty()) return;
+
+        if (row->Set(env->context(), key, val).IsNothing()) {
+          return;
+        }
+      }
+
+      Local<Object> result = Object::New(isolate);
+      result->Set(context, String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, false)).Check();
+      result->Set(context, String::NewFromUtf8Literal(isolate, "value"), row).Check();
+
+      info.GetReturnValue().Set(result);
+    },
+    v8::External::New(isolate, new std::pair<StatementSync*, std::pair<Environment*, int>*>(
+      stmt,
+      new std::pair<Environment*, int>(env, sqlite3_column_count(stmt->statement_))
+    ))
+  );
+
+  v8::Local<v8::FunctionTemplate> iteratorFuncTemplate = v8::FunctionTemplate::New(isolate, IteratorFunc);
+
+  iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "next"), nextFuncTemplate);
+  iterableIteratorTemplate->Set(v8::Symbol::GetIterator(isolate), iteratorFuncTemplate->GetFunction(context).ToLocalChecked());
+
+  v8::Local<v8::Value> iteratorPrototype = context->Global()->Get(context, String::NewFromUtf8Literal(isolate, "Iterator.prototype")).ToLocalChecked();
+  v8::Local<v8::Object> iterableIterator = iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
+  iterableIterator->SetPrototype(context, iteratorPrototype).ToChecked();
+
+  args.GetReturnValue().Set(iterableIterator);
+}
+
 void StatementSync::Get(const FunctionCallbackInfo<Value>& args) {
   StatementSync* stmt;
   ASSIGN_OR_RETURN_UNWRAP(&stmt, args.This());

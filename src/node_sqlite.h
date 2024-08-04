@@ -58,6 +58,7 @@ class StatementSync : public BaseObject {
                                              DatabaseSync* db,
                                              sqlite3_stmt* stmt);
   static void All(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void Iterate(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void Get(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void Run(const v8::FunctionCallbackInfo<v8::Value>& args);
   static void SourceSQL(const v8::FunctionCallbackInfo<v8::Value>& args);
