@@ -578,12 +578,12 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
     v8::External::New(isolate, captureContext)
   );
 
-  iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "next"), nextFuncTemplate);
+  iterableIteratorTemplate->Set(
+    String::NewFromUtf8Literal(isolate, "next"),
+    nextFuncTemplate
+  );
 
   auto iterableIterator = iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
-  auto JSIteratorPrototype = context->Global()->Get(context, String::NewFromUtf8Literal(isolate, "Iterator.prototype")).ToLocalChecked();
-  iterableIterator->SetPrototype(context, JSIteratorPrototype).Check();
-
   args.GetReturnValue().Set(iterableIterator);
 }
 
