@@ -528,6 +528,7 @@ void StatementSync::IterateNextCallback(const FunctionCallbackInfo<Value>& args)
       result->Set(context, String::NewFromUtf8Literal(isolate, "done"), v8::Boolean::New(isolate, true)).Check();
       result->Set(context, String::NewFromUtf8Literal(isolate, "value"), v8::Null(isolate)).Check();
 
+      sqlite3_reset(stmt->statement_);
       args.GetReturnValue().Set(result);
       return;
     }
