@@ -85,6 +85,7 @@ class StatementSync : public BaseObject {
   v8::MaybeLocal<v8::Name> ColumnNameToName(const int column);
 
   static void IterateNextCallback(const v8::FunctionCallbackInfo<v8::Value>& args);
+  static void IterateReturnCallback(const v8::FunctionCallbackInfo<v8::Value>& args);
 };
 
 }  // namespace sqlite
