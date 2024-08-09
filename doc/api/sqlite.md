@@ -221,6 +221,25 @@ object. If the prepared statement does not return any results, this method
 returns `undefined`. The prepared statement [parameters are bound][] using the
 values in `namedParameters` and `anonymousParameters`.
 
+### `statement.iterate([namedParameters][, ...anonymousParameters])`
+
+<!-- YAML
+added: v22.7.0 ???
+-->
+
+* `namedParameters` {Object} An optional object used to bind named parameters.
+  The keys of this object are used to configure the mapping.
+* `...anonymousParameters` {null|number|bigint|string|Buffer|Uint8Array} Zero or
+  more values to bind to anonymous parameters.
+* Returns: {Iterator} An iterable iterator of objects. Each object corresponds to a row
+  returned by executing the prepared statement. The keys and values of each
+  object correspond to the column names and values of the row.
+
+This method executes a prepared statement and returns an iterator of
+objects. If the prepared statement does not return any results, this method
+returns an empty iterator. The prepared statement [parameters are bound][] using
+the values in `namedParameters` and `anonymousParameters`.
+
 ### `statement.run([namedParameters][, ...anonymousParameters])`
 
 <!-- YAML
@@ -307,7 +326,7 @@ Attempting to write an unsupported data type to SQLite will result in an
 exception.
 
 | SQLite    | JavaScript           |
-| --------- | -------------------- |
+|-----------|----------------------|
 | `NULL`    | `null`               |
 | `INTEGER` | `number` or `BigInt` |
 | `REAL`    | `number`             |
@@ -315,16 +334,29 @@ exception.
 | `BLOB`    | `Uint8Array`         |
 
 [SQL injection]: https://en.wikipedia.org/wiki/SQL_injection
+
 [`--experimental-sqlite`]: cli.md#--experimental-sqlite
+
 [`sqlite3_changes64()`]: https://www.sqlite.org/c3ref/changes.html
+
 [`sqlite3_close_v2()`]: https://www.sqlite.org/c3ref/close.html
+
 [`sqlite3_exec()`]: https://www.sqlite.org/c3ref/exec.html
+
 [`sqlite3_expanded_sql()`]: https://www.sqlite.org/c3ref/expanded_sql.html
+
 [`sqlite3_last_insert_rowid()`]: https://www.sqlite.org/c3ref/last_insert_rowid.html
+
 [`sqlite3_prepare_v2()`]: https://www.sqlite.org/c3ref/prepare.html
+
 [`sqlite3_sql()`]: https://www.sqlite.org/c3ref/expanded_sql.html
+
 [connection]: https://www.sqlite.org/c3ref/sqlite3.html
+
 [data types]: https://www.sqlite.org/datatype3.html
+
 [in memory]: https://www.sqlite.org/inmemorydb.html
+
 [parameters are bound]: https://www.sqlite.org/c3ref/bind_blob.html
+
 [prepared statement]: https://www.sqlite.org/c3ref/stmt.html
