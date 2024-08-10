@@ -336,3 +336,29 @@ test('execute a JavaScript file importing a cjs TypeScript file', async () => {
   match(result.stdout, /Hello, TypeScript!/);
   strictEqual(result.code, 0);
 });
+
+test('expect process.features.typescript to be \'strip\' when --experimental-strip-types', async () => {
+  const result = await spawnPromisified(process.execPath, [
+    '--experimental-strip-types',
+    '-p', 'process.features.typescript',
+  ]);
+
+  match(result.stderr, /Type Stripping is an experimental feature/);
+  strictEqual(result.stdout, 'strip\n');
+  strictEqual(result.code, 0);
+});
+
+test('expect process.features.typescript to be \'transform\' when --experimental-transform-types', async () => {
+  const result = await spawnPromisified(process.execPath, [
+    '--experimental-transform-types',
+    '-p', 'process.features.typescript',
+  ]);
+
+  match(result.stderr, /Type Stripping is an experimental feature/);
+  strictEqual(result.stdout, 'transform\n');
+  strictEqual(result.code, 0);
+});
+
+test('expect process.features.typescript to be false without type-stripping', async () => {
+  strictEqual(process.features.typescript, false);
+});

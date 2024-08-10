@@ -1982,6 +1982,21 @@ A boolean value that is `true` if the current Node.js build includes support for
 
 ***
 
+## `process.features.typescript`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+> Stability: 1.0 - Early development
+
+* {boolean|string}
+
+A string / boolean value that is `"strip"` if Node.js is run with `--experimental-strip-types`,
+`"transform"` if Node.js is run with `--experimental-transform-types`, and `false` otherwise.
+
+***
+
 ## `process.features.uv`
 
 <!-- YAML
