@@ -79,14 +79,13 @@ inline void THROW_ERR_SQLITE_ERROR(Isolate* isolate, sqlite3* db) {
 DatabaseSync::DatabaseSync(Environment* env,
                            Local<Object> object,
                            Local<String> location,
-                           bool open,
-                           bool allow_load_extension)
+                           bool open)
     : BaseObject(env, object) {
   MakeWeak();
   node::Utf8Value utf8_location(env->isolate(), location);
   location_ = utf8_location.ToString();
   connection_ = nullptr;
-  allow_load_extension_ = allow_load_extension;
+  allow_load_extension_ = false;
 
   if (open) {
     Open();
@@ -136,7 +135,6 @@ void DatabaseSync::New(const FunctionCallbackInfo<Value>& args) {
   }
 
   bool open = true;
-  bool allow_load_extension = false;
 
   if (args.Length() > 1) {
     if (!args[1]->IsObject()) {
@@ -166,19 +164,9 @@ void DatabaseSync::New(const FunctionCallbackInfo<Value>& args) {
       }
       open = open_v.As<Boolean>()->Value();
     }
-    if (!allow_load_extension_v->IsUndefined()) {
-      if (!allow_load_extension_v->IsBoolean()) {
-        node::THROW_ERR_INVALID_ARG_TYPE(
-            env->isolate(),
-            "The \"options.allowLoadExtension\" argument must be a boolean.");
-        return;
-      }
-      allow_load_extension = allow_load_extension_v.As<Boolean>()->Value();
-    }
   }
 
-  new DatabaseSync(
-      env, args.This(), args[0].As<String>(), open, allow_load_extension);
+  new DatabaseSync(env, args.This(), args[0].As<String>(), open);
 }
 
 void DatabaseSync::Open(const FunctionCallbackInfo<Value>& args) {
@@ -238,6 +226,20 @@ void DatabaseSync::Exec(const FunctionCallbackInfo<Value>& args) {
   CHECK_ERROR_OR_THROW(env->isolate(), db->connection_, r, SQLITE_OK, void());
 }
 
+void DatabaseSync::EnableLoadExtension(
+    const FunctionCallbackInfo<Value>& args) {
+  DatabaseSync* db;
+  ASSIGN_OR_RETURN_UNWRAP(&db, args.This());
+  Environment* env = Environment::GetCurrent(args);
+  if (!args[0]->IsBoolean()) {
+    node::THROW_ERR_INVALID_ARG_TYPE(
+        env->isolate(), "The \"allow\" argument must be a boolean.");
+    return;
+  }
+
+  db->allow_load_extension_ = args[0]->IsTrue();
+}
+
 void DatabaseSync::LoadExtension(const FunctionCallbackInfo<Value>& args) {
   DatabaseSync* db;
   ASSIGN_OR_RETURN_UNWRAP(&db, args.This());
@@ -256,12 +258,16 @@ void DatabaseSync::LoadExtension(const FunctionCallbackInfo<Value>& args) {
   auto isolate = env->isolate();
 
   BufferValue path(isolate, args[0]);
+  BufferValue entryPoint(isolate, args[1]);
   CHECK_NOT_NULL(*path);
   ToNamespacedPath(env, &path);
+  if (*entryPoint == nullptr) {
+    ToNamespacedPath(env, &entryPoint);
+  }
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemRead, path.ToStringView());
   char* errmsg = nullptr;
-  int r = sqlite3_load_extension(db->connection_, *path, nullptr, &errmsg);
+  int r = sqlite3_load_extension(db->connection_, *path, *entryPoint, &errmsg);
   if (r != SQLITE_OK) {
     isolate->ThrowException(node::ERR_LOAD_SQLITE_EXTENSION(isolate, errmsg));
   }
@@ -724,6 +730,10 @@ static void Initialize(Local<Object> target,
   SetProtoMethod(isolate, db_tmpl, "close", DatabaseSync::Close);
   SetProtoMethod(isolate, db_tmpl, "prepare", DatabaseSync::Prepare);
   SetProtoMethod(isolate, db_tmpl, "exec", DatabaseSync::Exec);
+  SetProtoMethod(isolate,
+                 db_tmpl,
+                 "enableLoadExtension",
+                 DatabaseSync::EnableLoadExtension);
   SetProtoMethod(
       isolate, db_tmpl, "loadExtension", DatabaseSync::LoadExtension);
   SetConstructorFunction(context, target, "DatabaseSync", db_tmpl);
