@@ -104,10 +104,9 @@ suite('DatabaseSync.prototype.loadExtension()', () => {
   });
 
   test('throws if path is not a valid sqlite extension', (t) => {
-    const db = new DatabaseSync(nextDb(), {
-      allowLoadExtension: true,
-    });
-    // Try to load a non-existent file
+    const db = new DatabaseSync(nextDb());
+    db.enableLoadExtension(true);
+    // Invalid files
     const files = [
       '/dev/null',
       path('a.js'),
@@ -128,7 +127,8 @@ suite('DatabaseSync.prototype.loadExtension()', () => {
 
   test('should load sqlite extension successfully', (t) => {
     const dbPath = nextDb();
-    const db = new DatabaseSync(dbPath, { allowLoadExtension: true });
+    const db = new DatabaseSync(dbPath);
+    db.enableLoadExtension(true);
     const supportedPlatforms = [
       ['macos', 'x86_64'],
       ['windows', 'x86_64'],
