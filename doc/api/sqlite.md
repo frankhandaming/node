@@ -107,6 +107,8 @@ added: v22.5.0
   * `open` {boolean} If `true`, the database is opened by the constructor. When
     this value is `false`, the database must be opened via the `open()` method.
     **Default:** `true`.
+  * `allowLoadExtension` {boolean} If `true`, the `loadExtension` SQL function
+    is enabled. **Default:** `false`.
 
 Constructs a new `DatabaseSync` instance.
 
@@ -118,6 +120,17 @@ added: v22.5.0
 
 Closes the database connection. An exception is thrown if the database is not
 open. This method is a wrapper around [`sqlite3_close_v2()`][].
+
+### `database.loadExtension(path)`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+* `path` {string} The path to the shared library to load.
+
+Loads a shared library into the database connection. The `allowLoadExtension` option must be
+enabled when constructing the `DatabaseSync` instance.
 
 ### `database.exec(sql)`
 
