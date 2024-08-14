@@ -39,8 +39,34 @@ if (common.isWindows) {
   assert.strictEqual(path.toNamespacedPath(
     '\\\\?\\UNC\\someserver\\someshare\\somefile'),
                      '\\\\?\\UNC\\someserver\\someshare\\somefile');
+  // Device name tests
+  assert.strictEqual(path.toNamespacedPath('C:\\path\\COM1'),
+                     '\\\\.\\COM1');
+  assert.strictEqual(path.toNamespacedPath('COM1'),
+                     '\\\\.\\COM1');
+  assert.strictEqual(path.toNamespacedPath('LPT1'),
+                     '\\\\.\\LPT1');
+  assert.strictEqual(path.toNamespacedPath('C:\\LPT1'),
+                     '\\\\.\\LPT1');
+  assert.strictEqual(path.toNamespacedPath('PhysicalDrive0'),
+                     '\\\\.\\PhysicalDrive0');
+  assert.strictEqual(path.toNamespacedPath('pipe\\mypipe'),
+                     '\\\\.\\pipe\\mypipe');
+  assert.strictEqual(path.toNamespacedPath('MAILSLOT\\mySlot'),
+                     '\\\\.\\MAILSLOT\\mySlot');
+  assert.strictEqual(path.toNamespacedPath('NUL'),
+                     '\\\\.\\NUL');
+  assert.strictEqual(path.toNamespacedPath('Tape0'),
+                     '\\\\.\\Tape0');
+  assert.strictEqual(path.toNamespacedPath('Changer0'),
+                     '\\\\.\\Changer0');
+  // Test cases for inputs with "\\.\" prefix
   assert.strictEqual(path.toNamespacedPath('\\\\.\\pipe\\somepipe'),
                      '\\\\.\\pipe\\somepipe');
+  assert.strictEqual(path.toNamespacedPath('\\\\.\\COM1'),
+                     '\\\\.\\COM1');
+  assert.strictEqual(path.toNamespacedPath('\\\\.\\LPT1'),
+                     '\\\\.\\LPT1');
 }
 
 assert.strictEqual(path.toNamespacedPath(''), '');
