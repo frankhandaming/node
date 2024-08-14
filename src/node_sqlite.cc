@@ -552,7 +552,8 @@ void StatementSync::IterateNextCallback(
 
   int r = sqlite3_step(stmt->statement_);
   if (r != SQLITE_ROW) {
-    CHECK_ERROR_OR_THROW(isolate, stmt->db_, r, SQLITE_DONE, void());
+    CHECK_ERROR_OR_THROW(
+        env->isolate(), stmt->db_->Connection(), r, SQLITE_DONE, void());
     Local<Object> result = Object::New(isolate);
     result
         ->Set(context,
@@ -599,10 +600,13 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   StatementSync* stmt;
   ASSIGN_OR_RETURN_UNWRAP(&stmt, args.This());
   Environment* env = Environment::GetCurrent(args);
+  THROW_AND_RETURN_ON_BAD_STATE(
+      env, stmt->IsFinalized(), "statement has been finalized");
   auto isolate = env->isolate();
   auto context = env->context();
   int r = sqlite3_reset(stmt->statement_);
-  CHECK_ERROR_OR_THROW(isolate, stmt->db_, r, SQLITE_OK, void());
+  CHECK_ERROR_OR_THROW(
+      env->isolate(), stmt->db_->Connection(), r, SQLITE_OK, void());
 
   if (!stmt->BindParams(args)) {
     return;
