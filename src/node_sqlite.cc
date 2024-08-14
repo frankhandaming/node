@@ -512,6 +512,10 @@ struct IterateCaptureContext {
   StatementSync* stmt;
 };
 
+void IteratorFunc(const v8::FunctionCallbackInfo<v8::Value>& info) {
+  info.GetReturnValue().Set(info.Holder());
+}
+
 void StatementSync::IterateReturnCallback(
     const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
@@ -622,11 +626,15 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
       v8::FunctionTemplate::New(isolate,
                                 StatementSync::IterateReturnCallback,
                                 External::New(isolate, captureContext));
+  v8::Local<v8::FunctionTemplate> iteratorFuncTemplate =
+      v8::FunctionTemplate::New(isolate, IteratorFunc);
 
   iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "next"),
                                 nextFuncTemplate);
   iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "return"),
                                 returnFuncTemplate);
+  iterableIteratorTemplate->Set(v8::Symbol::GetIterator(isolate),
+                                iteratorFuncTemplate);
 
   auto iterableIterator =
       iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
