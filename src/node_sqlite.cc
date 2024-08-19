@@ -145,15 +145,8 @@ void DatabaseSync::New(const FunctionCallbackInfo<Value>& args) {
 
     Local<Object> options = args[1].As<Object>();
     Local<String> open_string = FIXED_ONE_BYTE_STRING(env->isolate(), "open");
-    Local<String> allow_load_extension_string =
-        FIXED_ONE_BYTE_STRING(env->isolate(), "allowLoadExtension");
     Local<Value> open_v;
-    Local<Value> allow_load_extension_v;
     if (!options->Get(env->context(), open_string).ToLocal(&open_v)) {
-      return;
-    }
-    if (!options->Get(env->context(), allow_load_extension_string)
-             .ToLocal(&allow_load_extension_v)) {
       return;
     }
     if (!open_v->IsUndefined()) {
