@@ -31,7 +31,7 @@ jobs:
         run: |
             rm -rf test/fixtures/wpt/.git
             echo "NEW_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      - name: Create Pull Request
+      - name: Create Or Update Pull Request
         uses: gr2m/create-or-update-pull-request-action@86ec1766034c8173518f61d2075cc2a173fb8c97  # v1.9.4
         env:
           GITHUB_TOKEN: ${{ secrets.GH_USER_TOKEN }}
