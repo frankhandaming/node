@@ -25,12 +25,17 @@ const data2 = 'World';
 const expected = `${data1}\n${data2}\n`;
 
 const exec = require('child_process').exec;
-const f = JSON.stringify(__filename);
-const node = JSON.stringify(process.execPath);
 
 function test(child) {
-  const cmd = `(echo ${data1}; sleep 0.5; echo ${data2}) | ${node} ${f} ${child}`;
-  exec(cmd, common.mustSucceed((stdout, stderr) => {
+  const cmd = `(echo ${data1}; sleep 0.5; echo ${data2}) | "$NODE" "$FILE" "$CHILD"`;
+  exec(cmd, {
+    env: {
+      ...process.env,
+      NODE: process.execPath,
+      FILE: __filename,
+      CHILD: child,
+    }
+  }, common.mustSucceed((stdout, stderr) => {
     assert.strictEqual(
       stdout,
       expected,
