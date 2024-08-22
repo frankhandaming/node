@@ -8,7 +8,7 @@ const {
 function spawn() {
   const { spawnSync, execFileSync, execSync } = require('child_process');
   spawnSync(process.execPath, [ __filename, 'spawnSync' ], { stdio: 'inherit' });
-  execSync(`"${process.execPath}" "${__filename}" "execSync"`, { stdio: 'inherit' });
+  execSync(`"$NODE" "$FILE" "execSync"`, { stdio: 'inherit', env: { NODE: process.execPath, FILE: __filename } });
   execFileSync(process.execPath, [ __filename, 'execFileSync' ], { stdio: 'inherit' });
 }
 
