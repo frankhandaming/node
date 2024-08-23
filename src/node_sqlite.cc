@@ -641,7 +641,7 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   Local<Object> JSIterator = globalThis->Get(context,  String::NewFromUtf8Literal(isolate, "Iterator")).ToLocalChecked().As<Object>();
   Local<Object> JSIteratorPrototype = JSIterator->Get(context,  String::NewFromUtf8Literal(isolate, "prototype")).ToLocalChecked().As<Object>();
 
-  iterableIterator->Set(context, String::NewFromUtf8Literal(isolate, "__proto__"), JSIteratorPrototype).ToChecked();
+  iterableIterator->SetPrototype(context, JSIteratorPrototype).ToChecked();
 
   args.GetReturnValue().Set(iterableIterator);
 }
