@@ -32,6 +32,7 @@ using v8::Name;
 using v8::Null;
 using v8::Number;
 using v8::Object;
+using v8::ObjectTemplate;
 using v8::String;
 using v8::Uint8Array;
 using v8::Value;
@@ -612,18 +613,18 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  v8::Local<v8::ObjectTemplate> iterableIteratorTemplate =
-      v8::ObjectTemplate::New(isolate);
+  Local<ObjectTemplate> iterableIteratorTemplate =
+      ObjectTemplate::New(isolate);
 
   IterateCaptureContext* captureContext = new IterateCaptureContext();
   captureContext->num_cols = sqlite3_column_count(stmt->statement_);
   captureContext->stmt = stmt;
-  v8::Local<v8::FunctionTemplate> nextFuncTemplate =
-      v8::FunctionTemplate::New(isolate,
+  Local<FunctionTemplate> nextFuncTemplate =
+      FunctionTemplate::New(isolate,
                                 StatementSync::IterateNextCallback,
                                 External::New(isolate, captureContext));
-  v8::Local<v8::FunctionTemplate> returnFuncTemplate =
-      v8::FunctionTemplate::New(isolate,
+  Local<FunctionTemplate> returnFuncTemplate =
+      FunctionTemplate::New(isolate,
                                 StatementSync::IterateReturnCallback,
                                 External::New(isolate, captureContext));
 
@@ -632,8 +633,16 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "return"),
                                 returnFuncTemplate);
 
-  auto iterableIterator =
+  Local<Object> iterableIterator =
       iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
+
+  Local<Object> global = context->Global();
+  Local<Object> globalThis = global->Get(context,  String::NewFromUtf8Literal(isolate, "globalThis")).ToLocalChecked().As<Object>();
+  Local<Object> JSIterator = globalThis->Get(context,  String::NewFromUtf8Literal(isolate, "Iterator")).ToLocalChecked().As<Object>();
+  Local<Object> JSIteratorPrototype = JSIterator->Get(context,  String::NewFromUtf8Literal(isolate, "prototype")).ToLocalChecked().As<Object>();
+
+  iterableIterator->Set(context, String::NewFromUtf8Literal(isolate, "__proto__"), JSIteratorPrototype).ToChecked();
+
   args.GetReturnValue().Set(iterableIterator);
 }
 
