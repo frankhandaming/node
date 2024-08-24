@@ -33,6 +33,7 @@ using v8::NewStringType;
 using v8::LocalVector;
 using v8::MaybeLocal;
 using v8::Name;
+using v8::NewStringType;
 using v8::Null;
 using v8::Number;
 using v8::Object;
