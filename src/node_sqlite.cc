@@ -520,9 +520,9 @@ void StatementSync::IterateReturnCallback(
   auto context = env->context();
 
   Local<External> data = Local<External>::Cast(args.Data());
-  IterateCaptureContext* captureContext =
+  IterateCaptureContext* capture_context =
       static_cast<IterateCaptureContext*>(data->Value());
-  auto stmt = captureContext->stmt;
+  auto stmt = capture_context->stmt;
   sqlite3_reset(stmt->statement_);
 
   Local<Object> result = Object::New(isolate);
@@ -546,10 +546,10 @@ void StatementSync::IterateNextCallback(
   auto context = env->context();
 
   Local<External> data = Local<External>::Cast(args.Data());
-  IterateCaptureContext* captureContext =
+  IterateCaptureContext* capture_context =
       static_cast<IterateCaptureContext*>(data->Value());
-  auto stmt = captureContext->stmt;
-  auto num_cols = captureContext->num_cols;
+  auto stmt = capture_context->stmt;
+  auto num_cols = capture_context->num_cols;
 
   int r = sqlite3_step(stmt->statement_);
   if (r != SQLITE_ROW) {
@@ -613,45 +613,48 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  Local<ObjectTemplate> iterableIteratorTemplate = ObjectTemplate::New(isolate);
+  Local<ObjectTemplate> iterable_iterator_template =
+      ObjectTemplate::New(isolate);
 
-  IterateCaptureContext* captureContext = new IterateCaptureContext();
-  captureContext->num_cols = sqlite3_column_count(stmt->statement_);
-  captureContext->stmt = stmt;
-  Local<FunctionTemplate> nextFuncTemplate =
+  IterateCaptureContext* capture_context = new IterateCaptureContext();
+  capture_context->num_cols = sqlite3_column_count(stmt->statement_);
+  capture_context->stmt = stmt;
+  Local<FunctionTemplate> next_func_template =
       FunctionTemplate::New(isolate,
                             StatementSync::IterateNextCallback,
-                            External::New(isolate, captureContext));
-  Local<FunctionTemplate> returnFuncTemplate =
+                            External::New(isolate, capture_context));
+  Local<FunctionTemplate> return_func_template =
       FunctionTemplate::New(isolate,
                             StatementSync::IterateReturnCallback,
-                            External::New(isolate, captureContext));
+                            External::New(isolate, capture_context));
 
-  iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "next"),
-                                nextFuncTemplate);
-  iterableIteratorTemplate->Set(String::NewFromUtf8Literal(isolate, "return"),
-                                returnFuncTemplate);
+  iterable_iterator_template->Set(String::NewFromUtf8Literal(isolate, "next"),
+                                  next_func_template);
+  iterable_iterator_template->Set(String::NewFromUtf8Literal(isolate, "return"),
+                                  return_func_template);
 
-  Local<Object> iterableIterator =
-      iterableIteratorTemplate->NewInstance(context).ToLocalChecked();
+  Local<Object> iterable_iterator =
+      iterable_iterator_template->NewInstance(context).ToLocalChecked();
 
   Local<Object> global = context->Global();
-  Local<Object> globalThis =
+  Local<Object> js_global_this =
       global->Get(context, String::NewFromUtf8Literal(isolate, "globalThis"))
           .ToLocalChecked()
           .As<Object>();
-  Local<Object> JSIterator =
-      globalThis->Get(context, String::NewFromUtf8Literal(isolate, "Iterator"))
+  Local<Object> js_iterator =
+      js_global_this
+          ->Get(context, String::NewFromUtf8Literal(isolate, "Iterator"))
           .ToLocalChecked()
           .As<Object>();
-  Local<Object> JSIteratorPrototype =
-      JSIterator->Get(context, String::NewFromUtf8Literal(isolate, "prototype"))
+  Local<Object> js_iterator_prototype =
+      js_iterator
+          ->Get(context, String::NewFromUtf8Literal(isolate, "prototype"))
           .ToLocalChecked()
           .As<Object>();
 
-  iterableIterator->SetPrototype(context, JSIteratorPrototype).ToChecked();
+  iterable_iterator->SetPrototype(context, js_iterator_prototype).ToChecked();
 
-  args.GetReturnValue().Set(iterableIterator);
+  args.GetReturnValue().Set(iterable_iterator);
 }
 
 void StatementSync::Get(const FunctionCallbackInfo<Value>& args) {
