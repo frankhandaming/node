@@ -225,7 +225,7 @@ void DatabaseSync::EnableLoadExtension(
   ASSIGN_OR_RETURN_UNWRAP(&db, args.This());
   Environment* env = Environment::GetCurrent(args);
   if (!args[0]->IsBoolean()) {
-    node::THROW_ERR_INVALID_ARG_TYPE(
+    THROW_ERR_INVALID_ARG_TYPE(
         env->isolate(), "The \"allow\" argument must be a boolean.");
     return;
   }
