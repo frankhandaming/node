@@ -21,6 +21,7 @@ using v8::Boolean;
 using v8::Context;
 using v8::Exception;
 using v8::External;
+using v8::Function;
 using v8::FunctionCallbackInfo;
 using v8::FunctionTemplate;
 using v8::Integer;
@@ -32,7 +33,6 @@ using v8::Name;
 using v8::Null;
 using v8::Number;
 using v8::Object;
-using v8::ObjectTemplate;
 using v8::String;
 using v8::Uint8Array;
 using v8::Value;
@@ -517,7 +517,6 @@ void StatementSync::IterateReturnCallback(
     const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   auto isolate = env->isolate();
-  auto context = env->context();
 
   Local<External> data = Local<External>::Cast(args.Data());
   IterateCaptureContext* capture_context =
@@ -525,17 +524,14 @@ void StatementSync::IterateReturnCallback(
   auto stmt = capture_context->stmt;
   sqlite3_reset(stmt->statement_);
 
-  Local<Object> result = Object::New(isolate);
-  result
-      ->Set(context,
-            String::NewFromUtf8Literal(isolate, "done"),
-            Boolean::New(isolate, true))
-      .Check();
-  result
-      ->Set(
-          context, String::NewFromUtf8Literal(isolate, "value"), Null(isolate))
-      .Check();
+  LocalVector<Name> keys(isolate,
+                         {String::NewFromUtf8Literal(isolate, "done"),
+                          String::NewFromUtf8Literal(isolate, "value")});
+  LocalVector<Value> values(isolate,
+                            {Boolean::New(isolate, true), Null(isolate)});
 
+  Local<Object> result =
+      Object::New(isolate, Null(isolate), keys.data(), values.data(), 2);
   args.GetReturnValue().Set(result);
 }
 
@@ -543,7 +539,6 @@ void StatementSync::IterateNextCallback(
     const FunctionCallbackInfo<Value>& args) {
   Environment* env = Environment::GetCurrent(args);
   auto isolate = env->isolate();
-  auto context = env->context();
 
   Local<External> data = Local<External>::Cast(args.Data());
   IterateCaptureContext* capture_context =
@@ -555,45 +550,43 @@ void StatementSync::IterateNextCallback(
   if (r != SQLITE_ROW) {
     CHECK_ERROR_OR_THROW(
         env->isolate(), stmt->db_->Connection(), r, SQLITE_DONE, void());
-    Local<Object> result = Object::New(isolate);
-    result
-        ->Set(context,
-              String::NewFromUtf8Literal(isolate, "done"),
-              Boolean::New(isolate, true))
-        .Check();
-    result
-        ->Set(context,
-              String::NewFromUtf8Literal(isolate, "value"),
-              Null(isolate))
-        .Check();
-
     sqlite3_reset(stmt->statement_);
+
+    LocalVector<Name> keys(isolate,
+                           {String::NewFromUtf8Literal(isolate, "done"),
+                            String::NewFromUtf8Literal(isolate, "value")});
+    LocalVector<Value> values(isolate,
+                              {Boolean::New(isolate, true), Null(isolate)});
+
+    Local<Object> result =
+        Object::New(isolate, Null(isolate), keys.data(), values.data(), 2);
     args.GetReturnValue().Set(result);
     return;
   }
 
-  Local<Object> row = Object::New(isolate);
-
+  LocalVector<Name> row_keys(isolate);
+  row_keys.reserve(num_cols);
+  LocalVector<Value> row_values(isolate);
+  row_values.reserve(num_cols);
   for (int i = 0; i < num_cols; ++i) {
-    Local<Value> key = stmt->ColumnNameToValue(i);
-    if (key.IsEmpty()) return;
-    Local<Value> val = stmt->ColumnToValue(i);
-    if (val.IsEmpty()) return;
-
-    if (row->Set(env->context(), key, val).IsNothing()) {
-      return;
-    }
+    Local<Name> key;
+    if (!stmt->ColumnNameToName(i).ToLocal(&key)) return;
+    Local<Value> val;
+    if (!stmt->ColumnToValue(i).ToLocal(&val)) return;
+    row_keys.emplace_back(key);
+    row_values.emplace_back(val);
   }
 
-  Local<Object> result = Object::New(isolate);
-  result
-      ->Set(context,
-            String::NewFromUtf8Literal(isolate, "done"),
-            Boolean::New(isolate, false))
-      .Check();
-  result->Set(context, String::NewFromUtf8Literal(isolate, "value"), row)
-      .Check();
+  Local<Object> row = Object::New(
+      isolate, Null(isolate), row_keys.data(), row_values.data(), num_cols);
 
+  LocalVector<Name> keys(isolate,
+                         {String::NewFromUtf8Literal(isolate, "done"),
+                          String::NewFromUtf8Literal(isolate, "value")});
+  LocalVector<Value> values(isolate, {Boolean::New(isolate, false), row});
+
+  Local<Object> result =
+      Object::New(isolate, Null(isolate), keys.data(), values.data(), 2);
   args.GetReturnValue().Set(result);
 }
 
@@ -613,28 +606,25 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
     return;
   }
 
-  Local<ObjectTemplate> iterable_iterator_template =
-      ObjectTemplate::New(isolate);
-
   IterateCaptureContext* capture_context = new IterateCaptureContext();
   capture_context->num_cols = sqlite3_column_count(stmt->statement_);
   capture_context->stmt = stmt;
-  Local<FunctionTemplate> next_func_template =
-      FunctionTemplate::New(isolate,
-                            StatementSync::IterateNextCallback,
-                            External::New(isolate, capture_context));
-  Local<FunctionTemplate> return_func_template =
-      FunctionTemplate::New(isolate,
-                            StatementSync::IterateReturnCallback,
-                            External::New(isolate, capture_context));
 
-  iterable_iterator_template->Set(String::NewFromUtf8Literal(isolate, "next"),
-                                  next_func_template);
-  iterable_iterator_template->Set(String::NewFromUtf8Literal(isolate, "return"),
-                                  return_func_template);
+  Local<Function> next_func =
+      Function::New(context,
+                    StatementSync::IterateNextCallback,
+                    External::New(isolate, capture_context))
+          .ToLocalChecked();
+  Local<Function> return_func =
+      Function::New(context,
+                    StatementSync::IterateReturnCallback,
+                    External::New(isolate, capture_context))
+          .ToLocalChecked();
 
-  Local<Object> iterable_iterator =
-      iterable_iterator_template->NewInstance(context).ToLocalChecked();
+  LocalVector<Name> keys(isolate,
+                         {String::NewFromUtf8Literal(isolate, "next"),
+                          String::NewFromUtf8Literal(isolate, "return")});
+  LocalVector<Value> values(isolate, {next_func, return_func});
 
   Local<Object> global = context->Global();
   Local<Object> js_global_this =
@@ -652,8 +642,8 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
           .ToLocalChecked()
           .As<Object>();
 
-  iterable_iterator->SetPrototype(context, js_iterator_prototype).ToChecked();
-
+  Local<Object> iterable_iterator = Object::New(
+      isolate, js_iterator_prototype, keys.data(), values.data(), 2);
   args.GetReturnValue().Set(iterable_iterator);
 }
 
