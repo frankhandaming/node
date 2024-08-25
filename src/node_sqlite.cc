@@ -240,7 +240,7 @@ void DatabaseSync::LoadExtension(const FunctionCallbackInfo<Value>& args) {
   THROW_AND_RETURN_ON_BAD_STATE(
       env, db->connection_ == nullptr, "database is not open");
   THROW_AND_RETURN_ON_BAD_STATE(
-      env, !db->allow_load_extension_, "load extension is not allowed");
+      env, !db->allow_load_extension_, "extension loading is not allowed");
 
   if (!args[0]->IsString()) {
     node::THROW_ERR_INVALID_ARG_TYPE(env->isolate(),
