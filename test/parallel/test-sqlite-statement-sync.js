@@ -107,8 +107,8 @@ suite('StatementSync.prototype.iterate()', () => {
     );
     stmt = db.prepare('SELECT * FROM storage ORDER BY key');
     t.assert.deepStrictEqual(stmt.iterate().toArray(), [
-      { key: 'key1', val: 'val1' },
-      { key: 'key2', val: 'val2' },
+      { __proto__: null, key: 'key1', val: 'val1' },
+      { __proto__: null, key: 'key2', val: 'val2' },
     ]);
   });
 });
