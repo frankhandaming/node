@@ -524,9 +524,7 @@ void StatementSync::IterateReturnCallback(
   auto stmt = capture_context->stmt;
   sqlite3_reset(stmt->statement_);
 
-  LocalVector<Name> keys(isolate,
-                         {String::NewFromUtf8Literal(isolate, "done"),
-                          String::NewFromUtf8Literal(isolate, "value")});
+  LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
   LocalVector<Value> values(isolate,
                             {Boolean::New(isolate, true), Null(isolate)});
 
@@ -552,9 +550,7 @@ void StatementSync::IterateNextCallback(
         env->isolate(), stmt->db_->Connection(), r, SQLITE_DONE, void());
     sqlite3_reset(stmt->statement_);
 
-    LocalVector<Name> keys(isolate,
-                           {String::NewFromUtf8Literal(isolate, "done"),
-                            String::NewFromUtf8Literal(isolate, "value")});
+    LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
     LocalVector<Value> values(isolate,
                               {Boolean::New(isolate, true), Null(isolate)});
 
@@ -580,9 +576,7 @@ void StatementSync::IterateNextCallback(
   Local<Object> row = Object::New(
       isolate, Null(isolate), row_keys.data(), row_values.data(), num_cols);
 
-  LocalVector<Name> keys(isolate,
-                         {String::NewFromUtf8Literal(isolate, "done"),
-                          String::NewFromUtf8Literal(isolate, "value")});
+  LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
   LocalVector<Value> values(isolate, {Boolean::New(isolate, false), row});
 
   Local<Object> result =
@@ -621,9 +615,9 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
                     External::New(isolate, capture_context))
           .ToLocalChecked();
 
-  LocalVector<Name> keys(isolate,
-                         {String::NewFromUtf8Literal(isolate, "next"),
-                          String::NewFromUtf8Literal(isolate, "return")});
+  LocalVector<Name> keys(
+      isolate,
+      {env->next_string(), String::NewFromUtf8Literal(isolate, "return")});
   LocalVector<Value> values(isolate, {next_func, return_func});
 
   Local<Object> global = context->Global();
