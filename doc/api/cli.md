@@ -889,7 +889,7 @@ It is possible to run code containing inline types by passing
 ### `--experimental-async-context-frame`
 
 <!-- YAML
-added: REPLACEME
+added: v22.7.0
 -->
 
 > Stability: 1 - Experimental
@@ -936,7 +936,7 @@ JavaScript.
 ### `--experimental-transform-types`
 
 <!-- YAML
-added: REPLACEME
+added: v22.7.0
 -->
 
 > Stability: 1.0 - Early development
@@ -1022,7 +1022,9 @@ following permissions are restricted:
 ### `--experimental-require-module`
 
 <!-- YAML
-added: v22.0.0
+added:
+  - v22.0.0
+  - v20.17.0
 -->
 
 > Stability: 1.1 - Active Development
@@ -1090,6 +1092,20 @@ When used in conjunction with the `node:test` module, a code coverage report is
 generated as part of the test runner output. If no tests are run, a coverage
 report is not generated. See the documentation on
 [collecting code coverage from tests][] for more details.
+
+### `--experimental-test-isolation=mode`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+> Stability: 1.0 - Early development
+
+Configures the type of test isolation used in the test runner. When `mode` is
+`'process'`, each test file is run in a separate child process. When `mode` is
+`'none'`, all test files run in the same process as the test runner. The default
+isolation mode is `'process'`. This flag is ignored if the `--test` flag is not
+present. See the [test runner execution model][] section for more information.
 
 ### `--experimental-test-module-mocks`
 
@@ -1606,7 +1622,7 @@ added:
   - v20.10.0
 changes:
   - version:
-    - REPLACEME
+    - v22.7.0
     pr-url: https://github.com/nodejs/node/pull/53619
     description: Syntax detection is enabled by default.
 -->
@@ -1637,7 +1653,7 @@ Use this flag to disable top-level await in REPL.
 added: v22.0.0
 -->
 
-Use this flag to disable experimental [`WebSocket`][] support.
+Disable exposition of [`WebSocket`][] on the global scope.
 
 ### `--no-extra-info-on-fatal-exception`
 
@@ -1833,7 +1849,9 @@ Identical to `-e` but prints the result.
 ### `--experimental-print-required-tla`
 
 <!-- YAML
-added: v22.0.0
+added:
+  - v22.0.0
+  - v20.17.0
 -->
 
 This flag is only useful when `--experimental-require-module` is enabled.
@@ -2196,7 +2214,20 @@ added:
 -->
 
 The maximum number of test files that the test runner CLI will execute
-concurrently. The default value is `os.availableParallelism() - 1`.
+concurrently. If `--experimental-test-isolation` is set to `'none'`, this flag
+is ignored and concurrency is one. Otherwise, concurrency defaults to
+`os.availableParallelism() - 1`.
+
+### `--test-coverage-branches=threshold`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+> Stability: 1 - Experimental
+
+Require a minimum percent of covered branches. If code coverage does not reach
+the threshold specified, the process will exit with code `1`.
 
 ### `--test-coverage-exclude`
 
@@ -2215,6 +2246,17 @@ This option may be specified multiple times to exclude multiple glob patterns.
 If both `--test-coverage-exclude` and `--test-coverage-include` are provided,
 files must meet **both** criteria to be included in the coverage report.
 
+### `--test-coverage-functions=threshold`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+> Stability: 1 - Experimental
+
+Require a minimum percent of covered functions. If code coverage does not reach
+the threshold specified, the process will exit with code `1`.
+
 ### `--test-coverage-include`
 
 <!-- YAML
@@ -2231,6 +2273,17 @@ This option may be specified multiple times to include multiple glob patterns.
 
 If both `--test-coverage-exclude` and `--test-coverage-include` are provided,
 files must meet **both** criteria to be included in the coverage report.
+
+### `--test-coverage-lines=threshold`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+> Stability: 1 - Experimental
+
+Require a minimum percent of covered lines. If code coverage does not reach
+the threshold specified, the process will exit with code `1`.
 
 ### `--test-force-exit`
 
@@ -2361,7 +2414,7 @@ added: v22.3.0
 
 > Stability: 1.0 - Early development
 
-Regenerates the snapshot file used by the test runner for [snapshot testing][].
+Regenerates the snapshot files used by the test runner for [snapshot testing][].
 Node.js must be started with the `--experimental-test-snapshots` flag in order
 to use this functionality.
 
@@ -2997,8 +3050,11 @@ one is included in the list below.
 * `--secure-heap-min`
 * `--secure-heap`
 * `--snapshot-blob`
+* `--test-coverage-branches`
 * `--test-coverage-exclude`
+* `--test-coverage-functions`
 * `--test-coverage-include`
+* `--test-coverage-lines`
 * `--test-name-pattern`
 * `--test-only`
 * `--test-reporter-destination`
@@ -3534,6 +3590,7 @@ node --stack-trace-limit=12 -p -e "Error.stackTraceLimit" # prints 12
 [snapshot testing]: test.md#snapshot-testing
 [syntax detection]: packages.md#syntax-detection
 [test reporters]: test.md#test-reporters
+[test runner execution model]: test.md#test-runner-execution-model
 [timezone IDs]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [tracking issue for user-land snapshots]: https://github.com/nodejs/node/issues/44014
 [ways that `TZ` is handled in other environments]: https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
