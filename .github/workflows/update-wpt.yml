@@ -1,45 +1,72 @@
-name: Update WPT
-
+name: WPT update
 on:
-  workflow_dispatch:
   schedule:
     # Run once a week at 12:00 AM UTC on Sunday.
     - cron: 0 0 * * *
 
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  update-wpt:
-    name: Update WPT
-    permissions:
-      contents: write
-      pull-requests: write
+  wpt-update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          sparse-checkout: |
-            !test/fixtures/wpt
+      
+      # Generate bot token
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Retrieve GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
       - name: Clone WPT Repository
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
+        uses: actions/checkout@v4
         with:
           repository: web-platform-tests/wpt
           path: test/fixtures/wpt
-          sparse_checkout: common/ eventsource/ fetch/ interfaces/ mimesniff/ resources/ service-workers/ storage/ websockets/ xhr/ LICENSE.md
+          sparse-checkout: |
+            common/ eventsource/ fetch/ interfaces/ mimesniff/ resources/ service-workers/ storage/ websockets/ xhr/ LICENSE.md
           persist-credentials: false
+
       - name: Move WPT Files
         run: |
-            rm -rf test/fixtures/wpt/.git
-            echo "NEW_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-      - name: Create Or Update Pull Request
-        uses: gr2m/create-or-update-pull-request-action@86ec1766034c8173518f61d2075cc2a173fb8c97  # v1.9.4
+          rm -rf test/fixtures/wpt/.git
+          echo "NEW_VERSION=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_USER_TOKEN }}
-        with:
-          author: Node.js GitHub Bot <github-bot@iojs.org>
-          body: This is an automated update of the WPT to ${{ env.NEW_VERSION }}.
-          branch: actions/update-wpt  # Custom branch *just* for this Action.
-          commit-message: 'test: update WPT to ${{ env.NEW_VERSION }}'
-          labels: test
-          title: 'test: update WPT to ${{ env.NEW_VERSION }}'
-          update-pull-request-title-and-body: true
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Commit and push any changes
+        id: push-changes
+        run: |
+          if [[ "$(git status --porcelain)" != "" ]]; then
+            git config --global user.name '${{steps.app-token.outputs.app-slug}}[bot]'
+            git config --global user.email '${{steps.get-user-id.outputs.user-id}}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com>'
+            git checkout -b actions/update-wpt
+            git add .
+            if (! git show-ref origin/actions/update-wpt -q) || [[ "$(git diff origin/actions/update-wpt --stat)" != "" ]]; then
+              echo "createPR=true" >> $GITHUB_OUTPUT
+              git commit -m "test: update WPT to ${{ env.NEW_VERSION }}"
+              gh auth setup-git
+              git push origin actions/update-wpt -fu --no-verify
+            fi
+          fi
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Open a PR for the sync
+        if: steps.push-changes.outputs.createPR
+        continue-on-error: true
+        run: gh pr create --head actions/update-wpt --title "test: update WPT to ${{ env.NEW_VERSION }}" --body "This is an automated update of the WPT to ${{ env.NEW_VERSION }}."
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
