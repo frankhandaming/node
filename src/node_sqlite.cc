@@ -615,9 +615,7 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
                     External::New(isolate, capture_context))
           .ToLocalChecked();
 
-  LocalVector<Name> keys(
-      isolate,
-      {env->next_string(), String::NewFromUtf8Literal(isolate, "return")});
+  LocalVector<Name> keys(isolate, {env->next_string(), env->return_string()});
   LocalVector<Value> values(isolate, {next_func, return_func});
 
   Local<Object> global = context->Global();
