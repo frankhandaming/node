@@ -619,13 +619,8 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   LocalVector<Value> values(isolate, {next_func, return_func});
 
   Local<Object> global = context->Global();
-  Local<Object> js_global_this =
-      global->Get(context, String::NewFromUtf8Literal(isolate, "globalThis"))
-          .ToLocalChecked()
-          .As<Object>();
   Local<Object> js_iterator =
-      js_global_this
-          ->Get(context, String::NewFromUtf8Literal(isolate, "Iterator"))
+      global->Get(context, String::NewFromUtf8Literal(isolate, "Iterator"))
           .ToLocalChecked()
           .As<Object>();
   Local<Object> js_iterator_prototype =
