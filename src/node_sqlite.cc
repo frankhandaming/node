@@ -521,8 +521,14 @@ void StatementSync::IterateReturnCallback(
   Local<External> data = Local<External>::Cast(args.Data());
   IterateCaptureContext* capture_context =
       static_cast<IterateCaptureContext*>(data->Value());
-  auto stmt = capture_context->stmt;
-  sqlite3_reset(stmt->statement_);
+  
+  if (capture_context != nullptr) {
+    auto stmt = capture_context->stmt;
+    sqlite3_reset(stmt->statement_);
+
+    delete capture_context;
+    capture_context = nullptr;
+  }
 
   LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
   LocalVector<Value> values(isolate,
@@ -542,6 +548,19 @@ void StatementSync::IterateNextCallback(
   Local<External> data = Local<External>::Cast(args.Data());
   IterateCaptureContext* capture_context =
       static_cast<IterateCaptureContext*>(data->Value());
+  
+  if (capture_context == nullptr) {
+    LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
+    LocalVector<Value> values(isolate,
+                              {Boolean::New(isolate, true), Null(isolate)});
+
+    DCHECK_EQ(keys.size(), values.size());
+    Local<Object> result = Object::New(
+        isolate, Null(isolate), keys.data(), values.data(), keys.size());
+    args.GetReturnValue().Set(result);
+    return;
+  }
+
   auto stmt = capture_context->stmt;
   auto num_cols = capture_context->num_cols;
 
@@ -606,16 +625,17 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   IterateCaptureContext* capture_context = new IterateCaptureContext();
   capture_context->num_cols = sqlite3_column_count(stmt->statement_);
   capture_context->stmt = stmt;
+  auto capture_context_handle = External::New(isolate, capture_context);
 
   Local<Function> next_func =
       Function::New(context,
                     StatementSync::IterateNextCallback,
-                    External::New(isolate, capture_context))
+                    capture_context_handle)
           .ToLocalChecked();
   Local<Function> return_func =
       Function::New(context,
                     StatementSync::IterateReturnCallback,
-                    External::New(isolate, capture_context))
+                    capture_context_handle)
           .ToLocalChecked();
 
   LocalVector<Name> keys(isolate, {env->next_string(), env->return_string()});
