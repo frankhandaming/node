@@ -528,8 +528,9 @@ void StatementSync::IterateReturnCallback(
   LocalVector<Value> values(isolate,
                             {Boolean::New(isolate, true), Null(isolate)});
 
-  Local<Object> result =
-      Object::New(isolate, Null(isolate), keys.data(), values.data(), 2);
+  DCHECK_EQ(keys.size(), values.size());
+  Local<Object> result = Object::New(
+      isolate, Null(isolate), keys.data(), values.data(), keys.size());
   args.GetReturnValue().Set(result);
 }
 
@@ -554,8 +555,9 @@ void StatementSync::IterateNextCallback(
     LocalVector<Value> values(isolate,
                               {Boolean::New(isolate, true), Null(isolate)});
 
-    Local<Object> result =
-        Object::New(isolate, Null(isolate), keys.data(), values.data(), 2);
+    DCHECK_EQ(keys.size(), values.size());
+    Local<Object> result = Object::New(
+        isolate, Null(isolate), keys.data(), values.data(), keys.size());
     args.GetReturnValue().Set(result);
     return;
   }
@@ -579,8 +581,9 @@ void StatementSync::IterateNextCallback(
   LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
   LocalVector<Value> values(isolate, {Boolean::New(isolate, false), row});
 
-  Local<Object> result =
-      Object::New(isolate, Null(isolate), keys.data(), values.data(), 2);
+  DCHECK_EQ(keys.size(), values.size());
+  Local<Object> result = Object::New(
+      isolate, Null(isolate), keys.data(), values.data(), keys.size());
   args.GetReturnValue().Set(result);
 }
 
@@ -629,8 +632,9 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
           .ToLocalChecked()
           .As<Object>();
 
+  DCHECK_EQ(keys.size(), values.size());
   Local<Object> iterable_iterator = Object::New(
-      isolate, js_iterator_prototype, keys.data(), values.data(), 2);
+      isolate, js_iterator_prototype, keys.data(), values.data(), keys.size());
   args.GetReturnValue().Set(iterable_iterator);
 }
 
