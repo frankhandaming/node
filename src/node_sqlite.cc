@@ -521,7 +521,7 @@ void StatementSync::IterateReturnCallback(
   Local<External> data = Local<External>::Cast(args.Data());
   IterateCaptureContext* capture_context =
       static_cast<IterateCaptureContext*>(data->Value());
-  
+
   if (capture_context != nullptr) {
     auto stmt = capture_context->stmt;
     sqlite3_reset(stmt->statement_);
@@ -548,7 +548,7 @@ void StatementSync::IterateNextCallback(
   Local<External> data = Local<External>::Cast(args.Data());
   IterateCaptureContext* capture_context =
       static_cast<IterateCaptureContext*>(data->Value());
-  
+
   if (capture_context == nullptr) {
     LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
     LocalVector<Value> values(isolate,
@@ -628,29 +628,27 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   auto capture_context_handle = External::New(isolate, capture_context);
 
   Local<Function> next_func =
-      Function::New(context,
-                    StatementSync::IterateNextCallback,
-                    capture_context_handle)
+      Function::New(
+          context, StatementSync::IterateNextCallback, capture_context_handle)
           .ToLocalChecked();
   Local<Function> return_func =
-      Function::New(context,
-                    StatementSync::IterateReturnCallback,
-                    capture_context_handle)
+      Function::New(
+          context, StatementSync::IterateReturnCallback, capture_context_handle)
           .ToLocalChecked();
 
   LocalVector<Name> keys(isolate, {env->next_string(), env->return_string()});
   LocalVector<Value> values(isolate, {next_func, return_func});
 
   Local<Object> global = context->Global();
-  Local<Object> js_iterator =
-      global->Get(context, String::NewFromUtf8Literal(isolate, "Iterator"))
-          .ToLocalChecked()
-          .As<Object>();
-  Local<Object> js_iterator_prototype =
-      js_iterator
-          ->Get(context, String::NewFromUtf8Literal(isolate, "prototype"))
-          .ToLocalChecked()
-          .As<Object>();
+  Local<Value> js_iterator;
+  Local<Value> js_iterator_prototype;
+  if (!global->Get(context, String::NewFromUtf8Literal(isolate, "Iterator"))
+           .ToLocal(&js_iterator))
+    return;
+  if (!js_iterator.As<Object>()
+           ->Get(context, String::NewFromUtf8Literal(isolate, "prototype"))
+           .ToLocal(&js_iterator_prototype))
+    return;
 
   DCHECK_EQ(keys.size(), values.size());
   Local<Object> iterable_iterator = Object::New(
