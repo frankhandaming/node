@@ -3130,14 +3130,14 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
   ToNamespacedPath(env, &src);
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemRead, src.ToStringView());
-  auto src_path = std::filesystem::path(src.ToStringView());
+  auto src_path = std::filesystem::path(src.ToWString());
 
   BufferValue dest(isolate, args[1]);
   CHECK_NOT_NULL(*dest);
   ToNamespacedPath(env, &dest);
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemWrite, dest.ToStringView());
-  auto dest_path = std::filesystem::path(dest.ToStringView());
+  auto dest_path = std::filesystem::path(dest.ToWString());
 
   bool dereference = args[2]->IsTrue();
   bool recursive = args[3]->IsTrue();
