@@ -2548,7 +2548,7 @@ assert.throws(throwingFirst, /Second$/);
 Due to the confusing error-prone notation, avoid a string as the second
 argument.
 
-## `assert.deepMatch(actual, expected[, message])`
+## `assert.partialDeepEqual(actual, expected[, message])`
 
 <!-- YAML
 added: REPLACEME
@@ -2558,54 +2558,84 @@ added: REPLACEME
 * `expected` {any}
 * `message` {string|Error}
 
-[`assert.deepMatch()`][] evaluates the equivalence between the `actual` and `expected` parameters by
+[`assert.partialDeepEqual()`][] evaluates the equivalence between the `actual` and `expected` parameters by
 performing a deep comparison. This function ensures that all properties defined
 in the `expected` parameter match those in the `actual` parameter in
 both value and type, allowing type coercion. The main difference with [`assert.deepEqual()`][] is that
-[`assert.deepMatch()`][] does not require all properties in the `actual` parameter to be present in the
+[`assert.partialDeepEqual()`][] does not require all properties in the `actual` parameter to be present in the
 `expected` parameter.
 
 ```mjs
 import assert from 'node:assert';
 
-assert.deepMatch({ a: 1, b: '2' }, { a: 1, b: 2 });
+assert.partialDeepEqual({ a: 1, b: '2' }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatch({ a: 1, b: '2', c: 3 }, { a: 1, b: 2 });
+assert.partialDeepEqual({ a: 1, b: '2', c: 3 }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatch({ a: { b: { c: '1' } } }, { a: { b: { c: 1 } } });
+assert.partialDeepEqual({ a: { b: { c: '1' } } }, { a: { b: { c: 1 } } });
 // OK
 
-assert.deepMatch({ a: 1 }, { a: 1, b: 2 });
+assert.partialDeepEqual(new Set(['value1', 'value2']), new Set(['value1', 'value2']));
+// OK
+
+assert.partialDeepEqual(new Map([['key1', 'value1']]), new Map([['key1', 'value1']]));
+// OK
+
+assert.partialDeepEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]));
+// OK
+
+assert.partialDeepEqual(/abc/, /abc/);
+// OK
+
+assert.partialDeepEqual(new Date(0), new Date(0));
+// OK
+
+assert.partialDeepEqual({ a: 1 }, { a: 1, b: 2 });
 // AssertionError
 
-assert.deepMatch({ a: 1, b: true }, { a: 1, b: 'true' });
+assert.partialDeepEqual({ a: 1, b: true }, { a: 1, b: 'true' });
 // AssertionError
 
-assert.deepMatch({ a: { b: 2 } }, { a: { b: 2, c: 3 } });
+assert.partialDeepEqual({ a: { b: 2 } }, { a: { b: 2, c: 3 } });
 // AssertionError
 ```
 
 ```cjs
 const assert = require('node:assert');
 
-assert.deepMatch({ a: 1, b: '2' }, { a: 1, b: 2 });
+assert.partialDeepEqual({ a: 1, b: '2' }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatch({ a: 1, b: '2', c: 3 }, { a: 1, b: 2 });
+assert.partialDeepEqual({ a: 1, b: '2', c: 3 }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatch({ a: { b: { c: '1' } } }, { a: { b: { c: 1 } } });
+assert.partialDeepEqual({ a: { b: { c: '1' } } }, { a: { b: { c: 1 } } });
 // OK
 
-assert.deepMatch({ a: 1 }, { a: 1, b: 2 });
+assert.partialDeepEqual(new Set(['value1', 'value2']), new Set(['value1', 'value2']));
+// OK
+
+assert.partialDeepEqual(new Map([['key1', 'value1']]), new Map([['key1', 'value1']]));
+// OK
+
+assert.partialDeepEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]));
+// OK
+
+assert.partialDeepEqual(/abc/, /abc/);
+// OK
+
+assert.partialDeepEqual(new Date(0), new Date(0));
+// OK
+
+assert.partialDeepEqual({ a: 1 }, { a: 1, b: 2 });
 // AssertionError: Expected key b
 
-assert.deepMatch({ a: 1, b: true }, { a: 1, b: 'true' });
+assert.partialDeepEqual({ a: 1, b: true }, { a: 1, b: 'true' });
 // AssertionError
 
-assert.deepMatch({ a: { b: 2, d: 4 } }, { a: { b: 2, c: 3 } });
+assert.partialDeepEqual({ a: { b: 2, d: 4 } }, { a: { b: 2, c: 3 } });
 // AssertionError: Expected key c
 ```
 
@@ -2615,7 +2645,7 @@ parameter is undefined, a default error message is assigned. If the `message`
 parameter is an instance of an [`Error`][] then it will be thrown instead of the
 `AssertionError`.
 
-## `assert.deepMatchStrict(actual, expected[, message])`
+## `assert.partialDeepStrictEqual(actual, expected[, message])`
 
 <!-- YAML
 added: REPLACEME
@@ -2625,53 +2655,68 @@ added: REPLACEME
 * `expected` {any}
 * `message` {string|Error}
 
-[`assert.deepMatchStrict()`][] Assesses the equivalence between the `actual` and `expected` parameters through a
+[`assert.partialDeepStrictEqual()`][] Assesses the equivalence between the `actual` and `expected` parameters through a
 deep comparison, ensuring that all properties in the `expected` parameter are
 present in the `actual` parameter with equivalent values, not allowing type coercion.
-The main difference with [`assert.deepStrictEqual()`][] is that [`assert.deepMatchStrict()`][] does not require all
-properties in the `actual` parameter to be present in the `expected` parameter.
+The main difference with [`assert.deepStrictEqual()`][] is that [`assert.partialDeepStrictEqual()`][] does not require
+all properties in the `actual` parameter to be present in the `expected` parameter.
 
 ```mjs
 import assert from 'node:assert';
 
-assert.deepMatchStrict({ a: 1, b: 2 }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual({ a: 1, b: 2 }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatchStrict({ a: { b: { c: 1 } } }, { a: { b: { c: 1 } } });
+assert.partialDeepStrictEqual({ a: { b: { c: 1 } } }, { a: { b: { c: 1 } } });
 // OK
 
-assert.deepMatchStrict({ a: 1, b: 2, c: 3 }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual({ a: 1, b: 2, c: 3 }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatchStrict({ a: 1 }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual(new Set(['value1', 'value2']), new Set(['value1', 'value2']));
+// OK
+
+assert.partialDeepStrictEqual(new Map([['key1', 'value1']]), new Map([['key1', 'value1']]));
+// OK
+
+assert.partialDeepStrictEqual(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]));
+// OK
+
+assert.partialDeepStrictEqual(/abc/, /abc/);
+// OK
+
+assert.partialDeepStrictEqual(new Date(0), new Date(0));
+// OK
+
+assert.partialDeepStrictEqual({ a: 1 }, { a: 1, b: 2 });
 // AssertionError
 
-assert.deepMatchStrict({ a: 1, b: '2' }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual({ a: 1, b: '2' }, { a: 1, b: 2 });
 // AssertionError
 
-assert.deepMatchStrict({ a: { b: 2 } }, { a: { b: '2' } });
+assert.partialDeepStrictEqual({ a: { b: 2 } }, { a: { b: '2' } });
 // AssertionError
 ```
 
 ```cjs
 const assert = require('node:assert');
 
-assert.deepMatchStrict({ a: 1, b: 2 }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual({ a: 1, b: 2 }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatchStrict({ a: { b: { c: 1 } } }, { a: { b: { c: 1 } } });
+assert.partialDeepStrictEqual({ a: { b: { c: 1 } } }, { a: { b: { c: 1 } } });
 // OK
 
-assert.deepMatchStrict({ a: 1, b: 2, c: 3 }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual({ a: 1, b: 2, c: 3 }, { a: 1, b: 2 });
 // OK
 
-assert.deepMatchStrict({ a: 1 }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual({ a: 1 }, { a: 1, b: 2 });
 // AssertionError
 
-assert.deepMatchStrict({ a: 1, b: '2' }, { a: 1, b: 2 });
+assert.partialDeepStrictEqual({ a: 1, b: '2' }, { a: 1, b: 2 });
 // AssertionError
 
-assert.deepMatchStrict({ a: { b: 2 } }, { a: { b: '2' } });
+assert.partialDeepStrictEqual({ a: { b: 2 } }, { a: { b: '2' } });
 // AssertionError
 ```
 
@@ -2803,8 +2848,6 @@ parameter is an instance of an [`Error`][] then it will be thrown instead of the
 [`WeakMap`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap
 [`WeakSet`]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet
 [`assert.deepEqual()`]: #assertdeepequalactual-expected-message
-[`assert.deepMatch()`]: #assertdeepmatchactual-expected-message
-[`assert.deepMatchStrict()`]: #assertdeepmatchstrictactual-expected-message
 [`assert.deepStrictEqual()`]: #assertdeepstrictequalactual-expected-message
 [`assert.doesNotThrow()`]: #assertdoesnotthrowfn-error-message
 [`assert.equal()`]: #assertequalactual-expected-message
@@ -2815,6 +2858,8 @@ parameter is an instance of an [`Error`][] then it will be thrown instead of the
 [`assert.notEqual()`]: #assertnotequalactual-expected-message
 [`assert.notStrictEqual()`]: #assertnotstrictequalactual-expected-message
 [`assert.ok()`]: #assertokvalue-message
+[`assert.partialDeepEqual()`]: #assertpartialdeepequalactual-expected-message
+[`assert.partialDeepStrictEqual()`]: #assertpartialdeepstrictequalactual-expected-message
 [`assert.strictEqual()`]: #assertstrictequalactual-expected-message
 [`assert.throws()`]: #assertthrowsfn-error-message
 [`getColorDepth()`]: tty.md#writestreamgetcolordepthenv

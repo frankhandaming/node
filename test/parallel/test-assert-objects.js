@@ -35,7 +35,7 @@ async function generateCryptoKey() {
 }
 
 describe('Object Comparison Tests', () => {
-  describe('deepMatchStrict', () => {
+  describe('partialDeepStrictEqual', () => {
     describe('throws an error', () => {
       [
         {
@@ -193,7 +193,7 @@ describe('Object Comparison Tests', () => {
         },
       ].forEach(({ description, actual, expected }) => {
         it(description, () => {
-          assert.throws(() => assert.deepMatchStrict(actual, expected), Error);
+          assert.throws(() => assert.partialDeepStrictEqual(actual, expected), Error);
         });
       });
     });
@@ -213,6 +213,21 @@ describe('Object Comparison Tests', () => {
         description: 'compares two objects with different property order',
         actual: { a: 1, b: 'string' },
         expected: { b: 'string', a: 1 },
+      },
+      {
+        description: 'compares two deeply nested objects with partial equality',
+        actual: { a: { nested: { property: true, some: 'other' } } },
+        expected: { a: { nested: { property: true } } },
+      },
+      {
+        description: 'compares two integers',
+        actual: 1,
+        expected: 1,
+      },
+      {
+        description: 'compares two strings',
+        actual: '1',
+        expected: '1',
       },
       {
         description: 'compares two objects with nested objects',
@@ -388,24 +403,24 @@ describe('Object Comparison Tests', () => {
       },
       {
         description:
-          'compares one subset object with another, does not throw an error',
+          'compares one subset object with another',
         actual: { a: 1, b: 2, c: 3 },
         expected: { b: 2 },
       },
       {
         description:
-          'compares one subset array with another, does not throw an error',
+          'compares one subset array with another',
         actual: [1, 2, 3],
         expected: [2],
       },
     ].forEach(({ description, actual, expected }) => {
       it(description, () => {
-        assert.deepMatchStrict(actual, expected);
+        assert.partialDeepStrictEqual(actual, expected);
       });
     });
   });
 
-  describe('deepMatch', () => {
+  describe('partialDeepEqual', () => {
     describe('throws an error', () => {
       [
         {
@@ -416,7 +431,7 @@ describe('Object Comparison Tests', () => {
         },
         {
           description:
-            'deepMatch throws when comparing two objects with null and empty object',
+            'partialDeepEqual throws when comparing two objects with null and empty object',
           actual: { a: null },
           expected: { a: {} },
         },
@@ -437,7 +452,7 @@ describe('Object Comparison Tests', () => {
         },
       ].forEach(({ description, actual, expected }) => {
         it(description, () => {
-          assert.throws(() => assert.deepMatch(actual, expected), Error);
+          assert.throws(() => assert.partialDeepEqual(actual, expected), Error);
         });
       });
     });
@@ -522,7 +537,7 @@ describe('Object Comparison Tests', () => {
         },
       ].forEach(({ description, actual, expected }) => {
         it(description, () => {
-          assert.deepMatch(actual, expected);
+          assert.partialDeepEqual(actual, expected);
         });
       });
     });
@@ -531,31 +546,40 @@ describe('Object Comparison Tests', () => {
     describe('throws an error', () => {
       [
         {
-          description: 'throws because only one argument is provided',
-          actual: () => assert.includesStrict({ a: 1 }),
-          expected: Error,
+          description: 'throws because actual is nor an Array or a string',
+          actual: { a: 1 },
+          expected: [1],
+          errorCode: 'ERR_INVALID_ARG_TYPE'
+        },
+        {
+          description: 'throws because expected is nor an Array or a string',
+          actual: [1],
+          expected: { a: 1 },
+          errorCode: 'ERR_INVALID_ARG_TYPE'
         },
         {
           description:
             'throws when comparing one subset array with another',
-          actual: () => assert.includesStrict([1, 2, 3], ['2']),
-          expected: Error,
+          actual: [1, 2, 3],
+          expected: ['2'],
         },
         {
           description:
             'throws when comparing one subset string with another',
-          actual: () => assert.includesStrict('abc', '2'),
-          expected: Error,
+          actual: 'abc',
+          expected: '2',
         },
         {
           description:
             'throws because the expected value is longer than the actual value',
-          actual: () => assert.includesStrict('abc', 'abcd'),
-          expected: Error,
+          actual: 'abc',
+          expected: 'abcd',
         },
-      ].forEach(({ description, actual, expected }) => {
+      ].forEach(({ description, actual, expected, errorCode }) => {
         it(description, () => {
-          assert.throws(actual, expected);
+          assert.throws(() => assert.includesStrict(actual, expected), errorCode ?
+            { code: errorCode } :
+            assert.AssertionError);
         });
       });
     });
@@ -564,13 +588,13 @@ describe('Object Comparison Tests', () => {
       [
         {
           description:
-            'compares one subset array with another, it does not throw an error',
+            'compares one subset array with another',
           actual: [1, 2, 3],
           expected: [2],
         },
         {
           description:
-            'compares one subset string with another, it does not throw an error',
+            'compares one subset string with another',
           actual: 'abc',
           expected: 'b',
         },
@@ -586,25 +610,34 @@ describe('Object Comparison Tests', () => {
     describe('throws an error', () => {
       [
         {
-          description: 'throws because only one argument is provided',
-          actual: () => assert.includes({ a: 1 }),
-          expected: Error,
+          description: 'throws because actual is nor an Array or a string',
+          actual: { a: 1 },
+          expected: [1],
+          errorCode: 'ERR_INVALID_ARG_TYPE'
+        },
+        {
+          description: 'throws because expected is nor an Array or a string',
+          actual: [1],
+          expected: { a: 1 },
+          errorCode: 'ERR_INVALID_ARG_TYPE'
         },
         {
           description:
             'throws because using includes with a string and an array',
-          actual: () => assert.includes('abc', ['a', 'b', 'c']),
-          expected: Error,
+          actual: 'abc',
+          expected: ['a', 'b', 'c'],
         },
         {
           description:
             'throws because the expected value is longer than the actual value',
-          actual: () => assert.includes('abc', 'abcd'),
-          expected: Error,
+          actual: 'abc',
+          expected: 'abcd',
         },
-      ].forEach(({ description, actual, expected }) => {
+      ].forEach(({ description, actual, expected, errorCode }) => {
         it(description, () => {
-          assert.throws(actual, expected);
+          assert.throws(() => assert.includes(actual, expected), errorCode ?
+            { code: errorCode } :
+            assert.AssertionError);
         });
       });
     });
