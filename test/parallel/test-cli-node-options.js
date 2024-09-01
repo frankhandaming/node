@@ -6,14 +6,15 @@ if (process.config.variables.node_without_node_options)
 // Test options specified by env variable.
 
 const assert = require('assert');
+const path = require('path');
 const exec = require('child_process').execFile;
 const { Worker } = require('worker_threads');
 
 const tmpdir = require('../common/tmpdir');
 tmpdir.refresh();
 
-const printA = require.resolve('../fixtures/printA.js');
-const printSpaceA = require.resolve('../fixtures/print A.js');
+const printA = path.relative(tmpdir.path, require.resolve('../fixtures/printA.js'));
+const printSpaceA = path.relative(tmpdir.path, require.resolve('../fixtures/print A.js'));
 
 expectNoWorker(` -r ${printA} `, 'A\nB\n');
 expectNoWorker(`-r ${printA}`, 'A\nB\n');

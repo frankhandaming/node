@@ -2,6 +2,8 @@
 const common = require('../common');
 if (!common.hasCrypto)
   common.skip('missing crypto');
+if (common.isInsideCWDWithUnusualChars)
+  common.skip('npm does not support this install path');
 
 const path = require('path');
 const exec = require('child_process').exec;
@@ -39,6 +41,8 @@ const pkgPath = path.join(installDir, 'package.json');
 fs.writeFileSync(pkgPath, pkgContent);
 
 const env = { ...process.env,
+              NODE: process.execPath,
+              NPM: npmPath,
               PATH: path.dirname(process.execPath),
               NPM_CONFIG_PREFIX: path.join(npmSandbox, 'npm-prefix'),
               NPM_CONFIG_TMP: path.join(npmSandbox, 'npm-tmp'),
@@ -46,7 +50,7 @@ const env = { ...process.env,
               NPM_CONFIG_UPDATE_NOTIFIER: false,
               HOME: homeDir };
 
-exec(`${process.execPath} ${npmPath} install`, {
+exec('"$NODE" "$NPM" install', {
   cwd: installDir,
   env: env
 }, common.mustCall(handleExit));
@@ -61,5 +65,5 @@ function handleExit(error, stdout, stderr) {
 
   assert.strictEqual(code, 0, `npm install got error code ${code}`);
   assert.strictEqual(signalCode, null, `unexpected signal: ${signalCode}`);
-  assert(fs.existsSync(`${installDir}/node_modules/package-name`));
+  assert(fs.existsSync(path.join(installDir, 'node_modules/package-name')));
 }

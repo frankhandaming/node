@@ -40,6 +40,7 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332  # v4.1.7
         with:
           persist-credentials: false
+          path: node
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f  # v5.1.1
         with:
@@ -51,6 +52,11 @@ jobs:
       - name: Environment Information
         run: npx envinfo
       - name: Build
-        run: make build-ci -j4 V=1 CONFIG_FLAGS="--error-on-warn"
+        run: make -C node build-ci -j4 V=1 CONFIG_FLAGS="--error-on-warn"
       - name: Test
-        run: make run-ci -j4 V=1 TEST_CI_ARGS="-p actions --node-args='--test-reporter=spec' --node-args='--test-reporter-destination=stdout' --measure-flakiness 9"
+        run: make -C node run-ci -j4 V=1 TEST_CI_ARGS="-p actions --measure-flakiness 9"
+      - name: Re-run test in a folder whose name contains unusual chars
+        run: |
+          mv node 'dir%20with unusual"chars '"'"'åß∂ƒ©∆¬…`'
+          cd 'dir%20with unusual"chars '"'"'åß∂ƒ©∆¬…`'
+          ./tools/test.py --flaky-tests keep_retrying -p actions -j 4
