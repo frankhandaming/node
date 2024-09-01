@@ -126,10 +126,6 @@ void DumpJavaScriptBacktrace(FILE* fp);
 #define ABORT_NO_BACKTRACE() abort()
 #endif
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 // Caller of this macro must not be marked as [[noreturn]]. Printing of
 // backtraces may not work correctly in [[noreturn]] functions because
 // when generating code for them the compiler can choose not to
@@ -565,20 +561,6 @@ class BufferValue : public MaybeStackBuffer<char> {
   inline std::string ToString() const { return std::string(out(), length()); }
   inline std::string_view ToStringView() const {
     return std::string_view(out(), length());
-  }
-  inline std::wstring ToWString() const {
-#ifdef _WIN32
-    auto size_needed = MultiByteToWideChar(
-        CP_UTF8, 0, out(), static_cast<int>(length()), nullptr, 0);
-    std::wstring wstrTo(length(), 0);
-    MultiByteToWideChar(
-        CP_UTF8, 0, out(), static_cast<int>(length()), &wstrTo[0], size_needed);
-#else
-    auto size_needed = std::mbstowcs(nullptr, out(), 0);
-    std::wstring wstrTo(size_needed, L'\0');
-    std::mbstowcs(&wstrTo[0], out(), length());
-#endif
-    return wstrTo;
   }
 };
 

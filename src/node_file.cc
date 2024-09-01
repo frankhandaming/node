@@ -3130,15 +3130,40 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
   ToNamespacedPath(env, &src);
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemRead, src.ToStringView());
-  auto src_path = std::filesystem::path(src.ToWString());
+#ifdef _WIN32
+  auto src_size_needed = MultiByteToWideChar(
+      CP_UTF8, 0, src.out(), static_cast<int>(src.length()), nullptr, 0);
+  std::wstring src_wstr(src_size_needed, 0);
+  MultiByteToWideChar(CP_UTF8,
+                      0,
+                      src.out(),
+                      static_cast<int>(src.length()),
+                      &src_wstr[0],
+                      src_size_needed);
+  auto src_path = std::filesystem::path(src_wstr);
+#else
+  auto src_path = std::filesystem::path(src.ToStringView());
+#endif
 
   BufferValue dest(isolate, args[1]);
   CHECK_NOT_NULL(*dest);
   ToNamespacedPath(env, &dest);
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemWrite, dest.ToStringView());
-  auto dest_path = std::filesystem::path(dest.ToWString());
-
+#ifdef _WIN32
+  auto dest_size_needed = MultiByteToWideChar(
+      CP_UTF8, 0, dest.out(), static_cast<int>(dest.length()), nullptr, 0);
+  std::wstring dest_wstr(dest_size_needed, 0);
+  MultiByteToWideChar(CP_UTF8,
+                      0,
+                      dest.out(),
+                      static_cast<int>(dest.length()),
+                      &dest_wstr[0],
+                      dest_size_needed);
+  auto dest_path = std::filesystem::path(dest_wstr);
+#else
+  auto dest_path = std::filesystem::path(dest.ToStringView());
+#endif
   bool dereference = args[2]->IsTrue();
   bool recursive = args[3]->IsTrue();
 
