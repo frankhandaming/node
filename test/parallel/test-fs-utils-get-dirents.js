@@ -67,16 +67,33 @@ const filename = 'foo';
 }
 {
   // Intentional error in lstat
+  let path = '';
+  if (common.isWindows) {
+    path = 'c:\\dev\\null\\does\\not\\exist';
+  } else {
+    path = '/dev/null/does/not/exist';
+  }
+  let full_path = path;
+  if (common.isWindows) {
+    full_path = path + '\\' + filename;
+  } else {
+    full_path = path + '/' + filename;
+  }
+
+  const errmsg_enotdir =
+    'ENOTDIR: not a directory, ' +
+    `lstat '${full_path}'`;
+  const errmsg_enoent =
+    'ENOENT: no such file or directory, ' +
+    `lstat '${full_path}'`;
+
   getDirents(
-    Buffer.from('/dev/null/does/not/exist'),
+    Buffer.from(path),
     [[Buffer.from(filename)], [UV_DIRENT_UNKNOWN]],
     common.mustCall((err) => {
-      assert.strictEqual(
-        err.message,
-        [
-          'ENOTDIR: not a directory, ' +
-          'lstat \'/dev/null/does/not/exist/foo\'',
-        ].join(''));
+      assert.match(
+        err.message, new RegExp(`^${errmsg_enotdir}|${errmsg_enoent}$`)
+      );
     },
     ));
 }
@@ -154,17 +171,34 @@ const filename = 'foo';
 }
 {
   // Intentional error in lstat
+  let path = '';
+  if (common.isWindows) {
+    path = 'c:\\dev\\null\\does\\not\\exist';
+  } else {
+    path = '/dev/null/does/not/exist';
+  }
+  let full_path = path;
+  if (common.isWindows) {
+    full_path = path + '\\' + filename;
+  } else {
+    full_path = path + '/' + filename;
+  }
+
+  const errmsg_enotdir =
+    'ENOTDIR: not a directory, ' +
+    `lstat '${full_path}'`;
+  const errmsg_enoent =
+    'ENOENT: no such file or directory, ' +
+    `lstat '${full_path}'`;
+
   getDirent(
-    '/dev/null/does/not/exist',
+    path,
     filename,
     UV_DIRENT_UNKNOWN,
     common.mustCall((err) => {
-      assert.strictEqual(
-        err.message,
-        [
-          'ENOTDIR: not a directory, ' +
-          'lstat \'/dev/null/does/not/exist/foo\'',
-        ].join(''));
+      assert.match(
+        err.message, new RegExp(`^${errmsg_enotdir}|${errmsg_enoent}$`)
+      );
     },
     ));
 }
