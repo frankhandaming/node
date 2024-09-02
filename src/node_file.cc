@@ -3131,16 +3131,7 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemRead, src.ToStringView());
 #ifdef _WIN32
-  auto src_size_needed = MultiByteToWideChar(
-      CP_UTF8, 0, src.out(), static_cast<int>(src.length()), nullptr, 0);
-  std::wstring src_wstr(src_size_needed, 0);
-  MultiByteToWideChar(CP_UTF8,
-                      0,
-                      src.out(),
-                      static_cast<int>(src.length()),
-                      &src_wstr[0],
-                      src_size_needed);
-  auto src_path = std::filesystem::path(src_wstr);
+  auto src_path = std::filesystem::path(src.ToU8StringView());
 #else
   auto src_path = std::filesystem::path(src.ToStringView());
 #endif
@@ -3151,16 +3142,7 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemWrite, dest.ToStringView());
 #ifdef _WIN32
-  auto dest_size_needed = MultiByteToWideChar(
-      CP_UTF8, 0, dest.out(), static_cast<int>(dest.length()), nullptr, 0);
-  std::wstring dest_wstr(dest_size_needed, 0);
-  MultiByteToWideChar(CP_UTF8,
-                      0,
-                      dest.out(),
-                      static_cast<int>(dest.length()),
-                      &dest_wstr[0],
-                      dest_size_needed);
-  auto dest_path = std::filesystem::path(dest_wstr);
+  auto dest_path = std::filesystem::path(dest.ToU8StringView());
 #else
   auto dest_path = std::filesystem::path(dest.ToStringView());
 #endif
