@@ -516,14 +516,11 @@ void StatementSync::IterateReturnCallback(
 
   auto self = args.This();
   // iterator has fetch all result or break, prevent next func to return result
-  self->Set(context,
-            String::NewFromUtf8Literal(isolate, "is_finished"),
-            Boolean::New(isolate, true))
+  self->Set(context, env->isfinished_string(), Boolean::New(isolate, true))
       .ToChecked();
 
   auto external_stmt = Local<External>::Cast(
-      self->Get(context, String::NewFromUtf8Literal(isolate, "statement"))
-          .ToLocalChecked());
+      self->Get(context, env->statement_string()).ToLocalChecked());
   auto stmt = static_cast<StatementSync*>(external_stmt->Value());
   if (!stmt->IsFinalized()) {
     sqlite3_reset(stmt->statement_);
@@ -549,8 +546,7 @@ void StatementSync::IterateNextCallback(
 
   // skip iteration if is_finished
   auto is_finished = Local<Boolean>::Cast(
-      self->Get(context, String::NewFromUtf8Literal(isolate, "is_finished"))
-          .ToLocalChecked());
+      self->Get(context, env->isfinished_string()).ToLocalChecked());
   if (is_finished->Value()) {
     LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
     LocalVector<Value> values(isolate,
@@ -564,13 +560,11 @@ void StatementSync::IterateNextCallback(
   }
 
   auto external_stmt = Local<External>::Cast(
-      self->Get(context, String::NewFromUtf8Literal(isolate, "statement"))
-          .ToLocalChecked());
+      self->Get(context, env->statement_string()).ToLocalChecked());
   auto stmt = static_cast<StatementSync*>(external_stmt->Value());
   auto num_cols =
       Local<Integer>::Cast(
-          self->Get(context, String::NewFromUtf8Literal(isolate, "num_cols"))
-              .ToLocalChecked())
+          self->Get(context, env->num_cols_string()).ToLocalChecked())
           ->Value();
 
   THROW_AND_RETURN_ON_BAD_STATE(
@@ -583,9 +577,7 @@ void StatementSync::IterateNextCallback(
 
     // cleanup when no more rows to fetch
     sqlite3_reset(stmt->statement_);
-    self->Set(context,
-              String::NewFromUtf8Literal(isolate, "is_finished"),
-              Boolean::New(isolate, true))
+    self->Set(context, env->isfinished_string(), Boolean::New(isolate, true))
         .ToChecked();
 
     LocalVector<Name> keys(isolate, {env->done_string(), env->value_string()});
@@ -653,11 +645,10 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   Local<Object> global = context->Global();
   Local<Value> js_iterator;
   Local<Value> js_iterator_prototype;
-  if (!global->Get(context, String::NewFromUtf8Literal(isolate, "Iterator"))
-           .ToLocal(&js_iterator))
+  if (!global->Get(context, env->iterator_string()).ToLocal(&js_iterator))
     return;
   if (!js_iterator.As<Object>()
-           ->Get(context, String::NewFromUtf8Literal(isolate, "prototype"))
+           ->Get(context, env->prototype_string())
            .ToLocal(&js_iterator_prototype))
     return;
 
@@ -670,17 +661,14 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   num_cols_pd.set_enumerable(false);
   num_cols_pd.set_configurable(false);
   iterable_iterator
-      ->DefineProperty(
-          context, String::NewFromUtf8Literal(isolate, "num_cols"), num_cols_pd)
+      ->DefineProperty(context, env->num_cols_string(), num_cols_pd)
       .ToChecked();
 
   auto stmt_pd =
       v8::PropertyDescriptor(v8::External::New(isolate, stmt), false);
   stmt_pd.set_enumerable(false);
   stmt_pd.set_configurable(false);
-  iterable_iterator
-      ->DefineProperty(
-          context, String::NewFromUtf8Literal(isolate, "statement"), stmt_pd)
+  iterable_iterator->DefineProperty(context, env->statement_string(), stmt_pd)
       .ToChecked();
 
   auto is_finished_pd =
@@ -688,9 +676,7 @@ void StatementSync::Iterate(const FunctionCallbackInfo<Value>& args) {
   stmt_pd.set_enumerable(false);
   stmt_pd.set_configurable(false);
   iterable_iterator
-      ->DefineProperty(context,
-                       String::NewFromUtf8Literal(isolate, "is_finished"),
-                       is_finished_pd)
+      ->DefineProperty(context, env->isfinished_string(), is_finished_pd)
       .ToChecked();
 
   args.GetReturnValue().Set(iterable_iterator);
