@@ -3130,11 +3130,14 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
   ToNamespacedPath(env, &src);
   THROW_IF_INSUFFICIENT_PERMISSIONS(
       env, permission::PermissionScope::kFileSystemRead, src.ToStringView());
+
 #ifdef _WIN32
   auto src_path = std::filesystem::path(src.ToU8StringView());
 #else
   auto src_path = std::filesystem::path(src.ToStringView());
 #endif
+
+  std::cout << src.ToStringView() << std::endl;
 
   BufferValue dest(isolate, args[1]);
   CHECK_NOT_NULL(*dest);
@@ -3153,6 +3156,8 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
   auto src_status = dereference
                         ? std::filesystem::symlink_status(src_path, error_code)
                         : std::filesystem::status(src_path, error_code);
+
+  std::cout << "before src error_code check " + error_code.message() << std::endl;
   if (error_code) {
     return env->ThrowUVException(EEXIST, "lstat", nullptr, src.out());
   }
@@ -3166,7 +3171,9 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
       (src_status.type() == std::filesystem::file_type::directory) ||
       (dereference && src_status.type() == std::filesystem::file_type::symlink);
 
+  std::cout << "before dest error_code check " + error_code.message() << std::endl;
   if (!error_code) {
+    std::cout << "dest inner " + error_code.message() << std::endl;
     // Check if src and dest are identical.
     if (std::filesystem::equivalent(src_path, dest_path)) {
       std::string message =
@@ -3192,6 +3199,8 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
   }
 
   std::string dest_path_str = dest_path.string();
+
+  std::cout << "before name startsWith " + src_path.string() << std::endl;
   // Check if dest_path is a subdirectory of src_path.
   if (src_is_dir && dest_path_str.starts_with(src_path.string())) {
     std::string message = "Cannot copy " + src_path.string() +
@@ -3247,6 +3256,8 @@ static void CpSyncCheckPaths(const FunctionCallbackInfo<Value>& args) {
 
   // Optimization opportunity: Check if this "exists" call is good for
   // performance.
+  std::cout << error_code << std::endl;
+  std::cout << dest_path.parent_path() << std::endl;
   if (!dest_exists || !std::filesystem::exists(dest_path.parent_path())) {
     std::filesystem::create_directories(dest_path.parent_path(), error_code);
   }

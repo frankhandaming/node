@@ -31,12 +31,12 @@ function nextdir() {
 // Synchronous implementation of copy.
 
 // It copies a nested folder containing UTF characters.
-// {
-//   const src = './test/fixtures/copy/utf/新建文件';
-//   const dest = nextdir();
-//   cpSync(src, dest, mustNotMutateObjectDeep({ recursive: true }));
-//   assertDirEquivalent(src, dest);
-// }
+{
+  const src = './test/fixtures/copy/utf/新建文件夹';
+  const dest = nextdir();
+  cpSync(src, dest, mustNotMutateObjectDeep({ recursive: true }));
+  assertDirEquivalent(src, dest);
+}
 
 // It copies a nested folder structure with files and folders.
 {
