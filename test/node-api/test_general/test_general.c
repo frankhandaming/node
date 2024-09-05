@@ -39,8 +39,8 @@ static napi_value GetFilename(napi_env env, napi_callback_info info) {
 
 static napi_value Init(napi_env env, napi_value exports) {
   napi_property_descriptor descriptors[] = {
-    DECLARE_NODE_API_PROPERTY("testGetNodeVersion", testGetNodeVersion),
-    DECLARE_NODE_API_GETTER("filename", GetFilename),
+      DECLARE_NODE_API_PROPERTY("testGetNodeVersion", testGetNodeVersion),
+      DECLARE_NODE_API_GETTER("filename", GetFilename),
   };
 
   NODE_API_CALL(env, napi_define_properties(
