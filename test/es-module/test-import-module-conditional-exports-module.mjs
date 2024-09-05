@@ -1,3 +1,5 @@
+// Flags: --experimental-require-module
+
 import '../common/index.mjs';
 import assert from 'node:assert';
 import * as staticImport from '../fixtures/es-modules/module-condition/import.mjs';

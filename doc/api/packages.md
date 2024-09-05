@@ -666,8 +666,12 @@ specific to least specific as conditions should be defined:
   if `--experimental-require-module` is enabled. _Always mutually
   exclusive with `"import"`._
 * `"module"` - matches no matter the package is loaded via `import`, `import()`
-  or `require()`. The format is expected to be ES modules. `require()` only
-  supports it when `--experimental-require-module` is enabled.
+  or `require()`. The format is expected to be ES modules that does not contain
+  top-level await in its module graph - if it does, `ERR_REQUIRE_ASYNC_MODULE`
+  will be thrown when the module is `require()`-ed. In this case, if users wish
+  to support `require()`, a `"require"` condition before the `"module"` condition
+  can be used to point to a CommonJS version that doesn't use top-level await.
+  This is only enabled when `--experimental-require-module` is enabled.
 * `"default"` - the generic fallback that always matches. Can be a CommonJS
   or ES module file. _This condition should always come last._
 
