@@ -285,7 +285,6 @@ const { distance } = require('./point.mjs');
 console.log(distance); // [Function: distance]
 ```
 
-
 If the module being `require()`'d contains top-level `await`, or the module
 graph it `import`s contains top-level `await`,
 [`ERR_REQUIRE_ASYNC_MODULE`][] will be thrown. In this case, users should
