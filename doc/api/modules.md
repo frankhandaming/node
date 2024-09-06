@@ -247,6 +247,8 @@ export function distance(a, b) { return (b.x - a.x) ** 2 + (b.y - a.y) ** 2; }
 export const __cjsUnwrapDefault = true;
 ```
 
+<!-- eslint-disable node-core/no-duplicate-requires -->
+
 ```cjs
 const Point = require('./point.mjs');
 console.log(Point); // [class Point]
@@ -272,6 +274,8 @@ export default class Point {
 
 export const __cjsUnwrapDefault = true;
 ```
+
+<!-- eslint-disable node-core/no-duplicate-requires -->
 
 ```cjs
 const Point = require('./point.mjs');

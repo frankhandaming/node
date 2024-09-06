@@ -1,5 +1,4 @@
 // Flags: --experimental-require-module
-import { mustCall } from '../common/index.mjs';
 import assert from 'assert';
 import { directRequireFixture, importFixture } from '../fixtures/pkgexports.mjs';
 
