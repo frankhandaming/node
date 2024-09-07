@@ -598,7 +598,7 @@ NODE_EXTERN v8::Local<v8::Context> NewContext(
 
 // Runs Node.js-specific tweaks on an already constructed context
 // Return value indicates success of operation
-NODE_EXTERN v8::Maybe<bool> InitializeContext(v8::Local<v8::Context> context);
+NODE_EXTERN v8::Maybe<void> InitializeContext(v8::Local<v8::Context> context);
 
 // If `platform` is passed, it will be used to register new Worker instances.
 // It can be `nullptr`, in which case creating new Workers inside of
@@ -850,7 +850,7 @@ NODE_EXTERN void SetTracingController(v8::TracingController* controller);
 
 // Run `process.emit('beforeExit')` as it would usually happen when Node.js is
 // run in standalone mode.
-NODE_EXTERN v8::Maybe<bool> EmitProcessBeforeExit(Environment* env);
+NODE_EXTERN v8::Maybe<void> EmitProcessBeforeExit(Environment* env);
 NODE_DEPRECATED("Use Maybe version (EmitProcessBeforeExit) instead",
     NODE_EXTERN void EmitBeforeExit(Environment* env));
 // Run `process.emit('exit')` as it would usually happen when Node.js is run

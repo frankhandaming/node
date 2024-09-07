@@ -10,6 +10,7 @@ using v8::HandleScope;
 using v8::Integer;
 using v8::Isolate;
 using v8::Just;
+using v8::JustVoid;
 using v8::Local;
 using v8::Maybe;
 using v8::NewStringType;
@@ -30,7 +31,7 @@ void EmitBeforeExit(Environment* env) {
   USE(EmitProcessBeforeExit(env));
 }
 
-Maybe<bool> EmitProcessBeforeExit(Environment* env) {
+Maybe<void> EmitProcessBeforeExit(Environment* env) {
   TRACE_EVENT0(TRACING_CATEGORY_NODE1(environment), "BeforeExit");
   if (!env->destroy_async_id_list()->empty())
     AsyncWrap::DestroyAsyncIdsCallback(env);
@@ -40,14 +41,14 @@ Maybe<bool> EmitProcessBeforeExit(Environment* env) {
   Context::Scope context_scope(env->context());
 
   if (!env->can_call_into_js()) {
-    return Nothing<bool>();
+    return Nothing<void>();
   }
 
   Local<Integer> exit_code = Integer::New(
       isolate, static_cast<int32_t>(env->exit_code(ExitCode::kNoFailure)));
 
-  return ProcessEmit(env, "beforeExit", exit_code).IsEmpty() ?
-      Nothing<bool>() : Just(true);
+  return ProcessEmit(env, "beforeExit", exit_code).IsEmpty() ? Nothing<void>()
+                                                             : JustVoid();
 }
 
 static ExitCode EmitExitInternal(Environment* env) {
