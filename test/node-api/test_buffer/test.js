@@ -28,4 +28,7 @@ const tick = require('util').promisify(require('../../common/tick'));
 
   // To test this doesn't crash
   binding.invalidObjectAsBuffer({});
+
+  const arrayBuffer = binding.bufferFromArrayBuffer();
+  assert(arrayBuffer instanceof ArrayBuffer, 'Expected an ArrayBuffer');
 })().then(common.mustCall());
