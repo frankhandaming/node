@@ -118,4 +118,45 @@ describe('AbortSignal.any()', { concurrency: !process.env.TEST_PARALLEL }, () =>
     controller.abort();
     assert.strictEqual(result, 1);
   });
+
+  // Refs: https://github.com/web-platform-tests/wpt/pull/47653
+  it('marks dependent signals aborted before abort events fire', () => {
+    const controller = new AbortController();
+    const signal1 = AbortSignal.any([controller.signal]);
+    const signal2 = AbortSignal.any([signal1]);
+    let eventFired = false;
+
+    controller.signal.addEventListener('abort', () => {
+      const signal3 = AbortSignal.any([signal2]);
+      assert(controller.signal.aborted);
+      assert(signal1.aborted);
+      assert(signal2.aborted);
+      assert(signal3.aborted);
+      eventFired = true;
+    });
+
+    controller.abort();
+    assert(eventFired, 'event fired');
+  });
+
+  // Refs: https://github.com/web-platform-tests/wpt/pull/47653
+  it('aborts dependent signals correctly for reentrant aborts', () => {
+    const controller1 = new AbortController();
+    const controller2 = new AbortController();
+    const signal = AbortSignal.any([controller1.signal, controller2.signal]);
+    let count = 0;
+
+    controller1.signal.addEventListener('abort', () => {
+      controller2.abort('reason 2');
+    });
+
+    signal.addEventListener('abort', () => {
+      count++;
+    });
+
+    controller1.abort('reason 1');
+    assert.strictEqual(count, 1);
+    assert(signal.aborted);
+    assert.strictEqual(signal.reason, 'reason 1');
+  });
 });
