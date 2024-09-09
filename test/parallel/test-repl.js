@@ -1014,3 +1014,13 @@ function event(ee, expected) {
     }));
   });
 }
+
+{
+  const server = repl.REPLServer();
+  common.expectWarning({
+    DeprecationWarning: {
+      DEP0185: 'Instantiating REPLServer without the \'new\' keyword has been deprecated.',
+    }
+  });
+  server.emit('line', '.exit');
+}
