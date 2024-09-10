@@ -68,7 +68,7 @@ const sampleBuffer = fixtures.readSync('/pss-vectors.json');
   }, {
     code: 'ERR_ZLIB_INITIALIZATION_FAILED',
     name: 'Error',
-    message: 'Initialization failed'
+    message: 'Setting parameter failed'
   });
 
   // Test that setting out-of-bounds option values or keys fails.
@@ -108,7 +108,7 @@ const sampleBuffer = fixtures.readSync('/pss-vectors.json');
   }, {
     code: 'ERR_ZLIB_INITIALIZATION_FAILED',
     name: 'Error',
-    message: 'Initialization failed'
+    message: 'Setting parameter failed'
   });
 }
 

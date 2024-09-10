@@ -25,6 +25,7 @@
 
 #include "async_wrap-inl.h"
 #include "env-inl.h"
+#include "node_errors.h"
 #include "node_external_reference.h"
 #include "threadpoolwork-inl.h"
 #include "util-inl.h"
@@ -385,6 +386,8 @@ class CompressionStream : public AsyncWrap, public ThreadPoolWork {
     CHECK_EQ(zlib_memory_, 0);
     CHECK_EQ(unreported_allocations_, 0);
   }
+
+  Environment* env() const { return this->ThreadPoolWork::env(); }
 
   void Close() {
     if (write_in_progress_) {
@@ -881,11 +884,13 @@ class ZstdStream final : public CompressionStream<CompressionContext> {
     if (args[1]->IsNumber()) {
       int64_t signed_pledged_src_size;
       if (!args[1]->IntegerValue(context).To(&signed_pledged_src_size)) {
-        args.GetReturnValue().Set(false);
+        THROW_ERR_INVALID_ARG_VALUE(wrap->env(),
+                                    "pledgedSrcSize should be an integer");
         return;
       }
       if (signed_pledged_src_size < 0) {
-        args.GetReturnValue().Set(false);
+        THROW_ERR_INVALID_ARG_VALUE(wrap->env(),
+                                    "pledgedSrcSize may not be negative");
         return;
       }
       pledged_src_size = signed_pledged_src_size;
@@ -895,7 +900,7 @@ class ZstdStream final : public CompressionStream<CompressionContext> {
     CompressionError err = wrap->context()->Init(pledged_src_size);
     if (err.IsError()) {
       wrap->EmitError(err);
-      args.GetReturnValue().Set(false);
+      THROW_ERR_ZLIB_INITIALIZATION_FAILED(wrap->env(), err.message);
       return;
     }
 
@@ -909,12 +914,10 @@ class ZstdStream final : public CompressionStream<CompressionContext> {
       CompressionError err = wrap->context()->SetParameter(i, data[i]);
       if (err.IsError()) {
         wrap->EmitError(err);
-        args.GetReturnValue().Set(false);
+        THROW_ERR_ZLIB_INITIALIZATION_FAILED(wrap->env(), err.message);
         return;
       }
     }
-
-    args.GetReturnValue().Set(true);
   }
 
   static void Params(const FunctionCallbackInfo<Value>& args) {
