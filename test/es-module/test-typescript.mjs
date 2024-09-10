@@ -324,3 +324,17 @@ test('execute a JavaScript file importing a cjs TypeScript file', async () => {
   match(result.stdout, /Hello, TypeScript!/);
   strictEqual(result.code, 0);
 });
+
+test('execute a TypeScript test mocking module', async () => {
+  const result = await spawnPromisified(process.execPath, [
+    '--test',
+    '--experimental-test-module-mocks',
+    '--experimental-strip-types',
+    '--no-warnings',
+    fixtures.path('typescript/ts/test-mock-module.ts'),
+  ]);
+  strictEqual(result.stderr, '');
+  match(result.stdout, /Hello, TypeScript-Module!/);
+  match(result.stdout, /Hello, TypeScript-CommonJS!/);
+  strictEqual(result.code, 0);
+});
