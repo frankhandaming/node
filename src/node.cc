@@ -800,6 +800,70 @@ int ProcessGlobalArgs(std::vector<std::string>* args,
 
 static std::atomic_bool init_called{false};
 
+static ExitCode ProcessEnvFiles(std::vector<std::string>* argv,
+                                std::vector<std::string>* errors) {
+  const auto& cli_options = per_process::cli_options->per_isolate->per_env;
+
+  // Early exit if both env_files and optional_env_files are empty
+  if (cli_options->env_files.empty() &&
+      cli_options->optional_env_files.empty()) {
+    return ExitCode::kNoFailure;
+  }
+
+  CHECK(!per_process::v8_initialized);
+
+  // Helper function to process environment files
+  auto process_file = [&](const std::string& file_path, bool is_optional) {
+    switch (per_process::dotenv_file.ParsePath(file_path)) {
+      case Dotenv::ParseResult::Valid:
+        break;
+      case Dotenv::ParseResult::InvalidContent:
+        errors->emplace_back(file_path + ": invalid format");
+        break;
+      case Dotenv::ParseResult::FileError:
+        if (is_optional) {
+          fprintf(stderr,
+                  "%s not found. Continuing without it.\n",
+                  file_path.c_str());
+        } else {
+          errors->emplace_back(file_path + ": not found");
+        }
+        break;
+      default:
+        UNREACHABLE();
+    }
+  };
+
+  // Process env files and optional env files based on the command-line
+  // arguments
+  // TODO(RedYetiDev): Find a way to get the index of each argument, in order to
+  // create a more robust method of determining the order of env files.
+  int env_file_idx = 0;
+  int optional_env_file_idx = 0;
+  for (const auto& arg : per_process::cli_options->cmdline) {
+    if (arg.starts_with("--env-file-if-exists")) {
+      process_file(cli_options->optional_env_files[optional_env_file_idx++],
+                   true);
+    } else if (arg.starts_with("--env-file")) {
+      process_file(cli_options->env_files[env_file_idx++], false);
+    }
+  }
+
+#if !defined(NODE_WITHOUT_NODE_OPTIONS)
+  // Parse and process Node.js options from the environment
+  std::vector<std::string> env_argv =
+      ParseNodeOptionsEnvVar(per_process::dotenv_file.GetNodeOptions(), errors);
+  env_argv.insert(env_argv.begin(), argv->at(0));
+
+  // Process global arguments
+  const ExitCode exit_code =
+      ProcessGlobalArgsInternal(&env_argv, nullptr, errors, kAllowedInEnvvar);
+  if (exit_code != ExitCode::kNoFailure) return exit_code;
+#endif
+
+  return ExitCode::kNoFailure;
+}
+
 // TODO(addaleax): Turn this into a wrapper around InitializeOncePerProcess()
 // (with the corresponding additional flags set), then eventually remove this.
 static ExitCode InitializeNodeWithArgsInternal(
@@ -851,34 +915,6 @@ static ExitCode InitializeNodeWithArgsInternal(
   HandleEnvOptions(per_process::cli_options->per_isolate->per_env);
 
   std::string node_options;
-  auto env_files = node::Dotenv::GetDataFromArgs(*argv);
-
-  if (!env_files.empty()) {
-    CHECK(!per_process::v8_initialized);
-
-    for (const auto& file_data : env_files) {
-      switch (per_process::dotenv_file.ParsePath(file_data.path)) {
-        case Dotenv::ParseResult::Valid:
-          break;
-        case Dotenv::ParseResult::InvalidContent:
-          errors->push_back(file_data.path + ": invalid format");
-          break;
-        case Dotenv::ParseResult::FileError:
-          if (file_data.is_optional) {
-            fprintf(stderr,
-                    "%s not found. Continuing without it.\n",
-                    file_data.path.c_str());
-            continue;
-          }
-          errors->push_back(file_data.path + ": not found");
-          break;
-        default:
-          UNREACHABLE();
-      }
-    }
-
-    per_process::dotenv_file.AssignNodeOptionsIfAvailable(&node_options);
-  }
 
 #if !defined(NODE_WITHOUT_NODE_OPTIONS)
   if (!(flags & ProcessInitializationFlags::kDisableNodeOptionsEnv)) {
@@ -914,6 +950,9 @@ static ExitCode InitializeNodeWithArgsInternal(
         ProcessGlobalArgsInternal(argv, exec_argv, errors, kDisallowedInEnvvar);
     if (exit_code != ExitCode::kNoFailure) return exit_code;
   }
+
+  const ExitCode exit_code = ProcessEnvFiles(argv, errors);
+  if (exit_code != ExitCode::kNoFailure) return exit_code;
 
   // Set the process.title immediately after processing argv if --title is set.
   if (!per_process::cli_options->title.empty())
