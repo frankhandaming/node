@@ -324,3 +324,32 @@ test('execute a JavaScript file importing a cjs TypeScript file', async () => {
   match(result.stdout, /Hello, TypeScript!/);
   strictEqual(result.code, 0);
 });
+
+test('execute a TypeScript file with Union Types', async () => {
+  const result = await spawnPromisified(process.execPath, [
+    '--experimental-strip-types',
+    '--no-warnings',
+    fixtures.path('typescript/ts/test-union-types.ts'),
+  ]);
+
+  strictEqual(result.stderr, '');
+  match(result.stdout, /Hello, TypeScript!/);
+  match(result.stdout, /admin/);
+  match(result.stdout, /Testing Partial Type/);
+  strictEqual(result.code, 0);
+});
+
+test('expect error when executing a TypeScript file with generics', async () => {
+  const result = await spawnPromisified(process.execPath, [
+    '--experimental-strip-types',
+    fixtures.path('typescript/ts/test-parameter-properties.ts'),
+  ]);
+
+  // This error should be thrown during transformation
+  match(
+    result.stderr,
+    /TypeScript parameter property is not supported in strip-only mode/
+  );
+  strictEqual(result.stdout, '');
+  strictEqual(result.code, 1);
+});
