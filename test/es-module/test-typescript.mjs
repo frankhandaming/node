@@ -325,7 +325,7 @@ test('execute a JavaScript file importing a cjs TypeScript file', async () => {
   strictEqual(result.code, 0);
 });
 
-test('execute a TypeScript file with Union Types', async () => {
+test('execute a TypeScript file with union types', async () => {
   const result = await spawnPromisified(process.execPath, [
     '--experimental-strip-types',
     '--no-warnings',
