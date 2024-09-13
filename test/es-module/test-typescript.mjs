@@ -333,9 +333,7 @@ test('execute a TypeScript file with union types', async () => {
   ]);
 
   strictEqual(result.stderr, '');
-  match(result.stdout, /Hello, TypeScript!/);
-  match(result.stdout, /admin/);
-  match(result.stdout, /Testing Partial Type/);
+  strictEqual(result.stdout,  `{ name: 'Hello, TypeScript!' }\n{ role: 'admin', permission: 'all' }\n{\n  foo: 'Testing Partial Type',\n  bar: 42,\n  zoo: true,\n  metadata: undefined\n}\n`)
   strictEqual(result.code, 0);
 });
 
