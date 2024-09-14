@@ -50,6 +50,58 @@
      */
     window.test_driver = {
         /**
+         Represents `WebDriver BiDi <https://w3c.github.io/webdriver-bidi>`_ protocol.
+         */
+        bidi: {
+            /**
+             * `log <https://w3c.github.io/webdriver-bidi/#module-log>`_ module.
+             */
+            log: {
+                /**
+                 * `log.entryAdded <https://w3c.github.io/webdriver-bidi/#event-log-entryAdded>`_ event.
+                 */
+                entry_added: {
+                    /**
+                     * Subscribe to the `log.entryAdded` event. This does not
+                     * add actual listeners. To listen to the event, use the
+                     * `on` or `once` methods.
+                     * @param {{contexts?: null | (string | Window)[]}} params - Parameters for the subscription.
+                     * * `contexts`: an array of window proxies or browsing
+                     * context ids to listen to the event. If not provided, the
+                     * event subscription is done for the current window's
+                     * browsing context. `null` for the global subscription.
+                     * @return {Promise<void>}
+                     */
+                    subscribe: async function (params = {}) {
+                        return window.test_driver_internal.bidi.log.entry_added.subscribe(params);
+                    },
+                    /**
+                     * Add an event listener for the `log.entryAdded
+                     * <https://w3c.github.io/webdriver-bidi/#event-log-entryAdded>`_ event. Make sure `subscribe` is
+                     * called before using this method.
+                     *
+                     * @param callback {function(event): void} - The callback
+                     * to be called when the event is fired.
+                     * @returns {function(): void} - A function to call to
+                     * remove the event listener.
+                     */
+                    on: function (callback) {
+                        return window.test_driver_internal.bidi.log.entry_added.on(callback);
+                    },
+                    once: function () {
+                        return new Promise(resolve => {
+                            const remove_handler = window.test_driver_internal.bidi.log.entry_added.on(
+                                data => {
+                                    resolve(data);
+                                    remove_handler();
+                                });
+                        });
+                    },
+                }
+            }
+        },
+
+        /**
          * Set the context in which testharness.js is loaded
          *
          * @param {WindowProxy} context - the window containing testharness.js
@@ -358,6 +410,25 @@
         },
 
         /**
+         * Gets a rect with the size and position on the screen from the current window state.
+         *
+         * Matches the behaviour of the `Get Window Rect
+         * <https://www.w3.org/TR/webdriver/#get-window-rect>`_
+         * WebDriver command
+         *
+         * @param {WindowProxy} context - Browsing context in which
+         *                                to run the call, or null for the current
+         *                                browsing context.
+         *
+         * @returns {Promise} fulfilled after the window rect is returned, or rejected
+         * in cases the WebDriver command returns errors. Returns a
+         * `WindowRect <https://www.w3.org/TR/webdriver/#dfn-windowrect-object>`_
+         */
+        get_window_rect: function(context=null) {
+            return window.test_driver_internal.get_window_rect(context);
+        },
+
+        /**
          * Send a sequence of actions
          *
          * This function sends a sequence of actions to perform.
@@ -647,7 +718,7 @@
          *
          * This function places `Secure Payment
          * Confirmation <https://w3c.github.io/secure-payment-confirmation>`_ into
-         * an automated 'autoaccept' or 'autoreject' mode, to allow testing
+         * an automated 'autoAccept' or 'autoReject' mode, to allow testing
          * without user interaction with the transaction UX prompt.
          *
          * Matches the `Set SPC Transaction Mode
@@ -667,8 +738,8 @@
          * @param {String} mode - The `transaction mode
          *                        <https://w3c.github.io/secure-payment-confirmation/#enumdef-transactionautomationmode>`_
          *                        to set. Must be one of "``none``",
-         *                        "``autoaccept``", or
-         *                        "``autoreject``".
+         *                        "``autoAccept``", or
+         *                        "``autoReject``".
          * @param {WindowProxy} context - Browsing context in which
          *                                to run the call, or null for the current
          *                                browsing context.
@@ -678,6 +749,42 @@
          */
         set_spc_transaction_mode: function(mode, context=null) {
           return window.test_driver_internal.set_spc_transaction_mode(mode, context);
+        },
+
+        /**
+         * Sets the current registration automation mode for Register Protocol Handlers.
+         *
+         * This function places `Register Protocol Handlers
+         * <https://html.spec.whatwg.org/multipage/system-state.html#custom-handlers>`_ into
+         * an automated 'autoAccept' or 'autoReject' mode, to allow testing
+         * without user interaction with the transaction UX prompt.
+         *
+         * Matches the `Set Register Protocol Handler Mode
+         * <https://html.spec.whatwg.org/multipage/system-state.html#set-rph-registration-mode>`_
+         * WebDriver command.
+         *
+         * @example
+         * await test_driver.set_rph_registration_mode("autoAccept");
+         * test.add_cleanup(() => {
+         *   return test_driver.set_rph_registration_mode("none");
+         * });
+         *
+         * navigator.registerProtocolHandler('web+soup', 'soup?url=%s');
+         *
+         * @param {String} mode - The `registration mode
+         *                        <https://html.spec.whatwg.org/multipage/system-state.html#registerprotocolhandler()-automation-mode>`_
+         *                        to set. Must be one of "``none``",
+         *                        "``autoAccept``", or
+         *                        "``autoReject``".
+         * @param {WindowProxy} context - Browsing context in which
+         *                                to run the call, or null for the current
+         *                                browsing context.
+         *
+         * @returns {Promise} Fulfilled after the transaction mode has been set,
+         *                    or rejected if setting the mode fails.
+         */
+        set_rph_registration_mode: function(mode, context=null) {
+          return window.test_driver_internal.set_rph_registration_mode(mode, context);
         },
 
         /**
@@ -968,6 +1075,72 @@
          */
         get_virtual_sensor_information: function(sensor_type, context=null) {
             return window.test_driver_internal.get_virtual_sensor_information(sensor_type, context);
+        },
+
+        /**
+         * Overrides device posture set by hardware.
+         *
+         * Matches the `Set device posture
+         * <https://w3c.github.io/device-posture/#set-device-posture>`_
+         * WebDriver command.
+         *
+         * @param {String} posture - A `DevicePostureType
+         *                           <https://w3c.github.io/device-posture/#dom-deviceposturetype>`_
+         *                           either "continuous" or "folded".
+         * @param {WindowProxy} [context=null] - Browsing context in which to
+         *                                       run the call, or null for the
+         *                                       current browsing context.
+         *
+         * @returns {Promise} Fulfilled when device posture is set.
+         *                    Rejected in case the WebDriver command errors out
+         *                    (including if a device posture of the given type
+         *                    does not exist).
+         */
+        set_device_posture: function(posture, context=null) {
+            return window.test_driver_internal.set_device_posture(posture, context);
+        },
+
+        /**
+         * Removes device posture override and returns device posture control
+         * back to hardware.
+         *
+         * Matches the `Clear device posture
+         * <https://w3c.github.io/device-posture/#clear-device-posture>`_
+         * WebDriver command.
+         *
+         * @param {WindowProxy} [context=null] - Browsing context in which to
+         *                                       run the call, or null for the
+         *                                       current browsing context.
+         *
+         * @returns {Promise} Fulfilled after the device posture override has
+         *                    been removed. Rejected in case the WebDriver
+         *                    command errors out.
+         */
+        clear_device_posture: function(context=null) {
+            return window.test_driver_internal.clear_device_posture(context);
+        },
+
+        /**
+         * Runs the `bounce tracking timer algorithm
+         * <https://privacycg.github.io/nav-tracking-mitigations/#bounce-tracking-timer>`_,
+         * which removes all hosts from the stateful bounce tracking map, without
+         * regard for the bounce tracking grace period and returns a list of the
+         * deleted hosts.
+         *
+         * Matches the `Run Bounce Tracking Mitigations
+         * <https://privacycg.github.io/nav-tracking-mitigations/#run-bounce-tracking-mitigations-command>`_
+         * WebDriver command.
+         *
+         * @param {WindowProxy} [context=null] - Browsing context in which to
+         *                                       run the call, or null for the
+         *                                       current browsing context.
+         * @returns {Promise} Fulfilled after the bounce tracking timer
+         *                    algorithm has finished running. Returns an array
+         *                    of all hosts that were in the stateful bounce
+         *                    tracking map before deletion occurred.
+         */
+        run_bounce_tracking_mitigations: function (context = null) {
+            return window.test_driver_internal.run_bounce_tracking_mitigations(context);
         }
     };
 
@@ -979,6 +1152,21 @@
          * implementation of one of the methods is not available.
          */
         in_automation: false,
+
+        bidi: {
+            log: {
+                entry_added: {
+                    async subscribe() {
+                        throw new Error(
+                            "bidi.log.entry_added.subscribe is not implemented by testdriver-vendor.js");
+                    },
+                    on() {
+                        throw new Error(
+                            "bidi.log.entry_added.on is not implemented by testdriver-vendor.js");
+                    }
+                }
+            }
+        },
 
         async click(element, coords) {
             if (this.in_automation) {
@@ -1000,6 +1188,14 @@
 
         async get_named_cookie(name, context=null) {
             throw new Error("get_named_cookie() is not implemented by testdriver-vendor.js");
+        },
+
+        async get_computed_role(element) {
+            throw new Error("get_computed_role is a testdriver.js function which cannot be run in this context.");
+        },
+
+        async get_computed_name(element) {
+            throw new Error("get_computed_name is a testdriver.js function which cannot be run in this context.");
         },
 
         async send_keys(element, keys) {
@@ -1044,6 +1240,10 @@
 
         async set_window_rect(rect, context=null) {
             throw new Error("set_window_rect() is not implemented by testdriver-vendor.js");
+        },
+
+        async get_window_rect(context=null) {
+            throw new Error("get_window_rect() is not implemented by testdriver-vendor.js");
         },
 
         async action_sequence(actions, context=null) {
@@ -1094,6 +1294,10 @@
             throw new Error("set_spc_transaction_mode() is not implemented by testdriver-vendor.js");
         },
 
+        set_rph_registration_mode: function(mode, context=null) {
+            return Promise.reject(new Error("unimplemented"));
+        },
+
         async cancel_fedcm_dialog(context=null) {
             throw new Error("cancel_fedcm_dialog() is not implemented by testdriver-vendor.js");
         },
@@ -1140,6 +1344,18 @@
 
         async get_virtual_sensor_information(sensor_type, context=null) {
             throw new Error("get_virtual_sensor_information() is not implemented by testdriver-vendor.js");
+        },
+
+        async set_device_posture(posture, context=null) {
+            throw new Error("set_device_posture() is not implemented by testdriver-vendor.js");
+        },
+
+        async clear_device_posture(context=null) {
+            throw new Error("clear_device_posture() is not implemented by testdriver-vendor.js");
+        },
+
+        async run_bounce_tracking_mitigations(context=null) {
+            throw new Error("run_bounce_tracking_mitigations() is not implemented by testdriver-vendor.js");
         }
     };
 })();
