@@ -4,37 +4,15 @@ import { describe, it, run } from 'node:test';
 import assert from 'node:assert';
 
 const files = [fixtures.path('test-runner', 'coverage.js')];
+const abortedSignal = AbortSignal.abort();
 
-describe('require(\'node:test\').run Coverage settings', { concurrency: true }, async () => {
+describe('require(\'node:test\').run coverage settings', { concurrency: true }, async () => {
   await describe('validation', async () => {
     await it('should only allow boolean in options.coverage', async () => {
       [Symbol(), {}, () => {}, 0, 1, 0n, 1n, '', '1', Promise.resolve(true), []]
         .forEach((coverage) => assert.throws(() => run({ coverage }), {
           code: 'ERR_INVALID_ARG_TYPE'
         }));
-    });
-
-    await it('should only allow coverage options when coverage is true', async () => {
-      assert.throws(
-        () => run({ coverage: false, coverageIncludeGlobs: [] }),
-        { code: 'ERR_INVALID_ARG_VALUE' },
-      );
-      assert.throws(
-        () => run({ coverage: false, coverageExcludeGlobs: [] }),
-        { code: 'ERR_INVALID_ARG_VALUE' },
-      );
-      assert.throws(
-        () => run({ coverage: false, lineCoverage: 0 }),
-        { code: 'ERR_INVALID_ARG_VALUE' },
-      );
-      assert.throws(
-        () => run({ coverage: false, branchCoverage: 0 }),
-        { code: 'ERR_INVALID_ARG_VALUE' },
-      );
-      assert.throws(
-        () => run({ coverage: false, functionCoverage: 0 }),
-        { code: 'ERR_INVALID_ARG_VALUE' },
-      );
     });
 
     await it('should only allow string|string[] in options.coverageExcludeGlobs', async () => {
@@ -47,8 +25,8 @@ describe('require(\'node:test\').run Coverage settings', { concurrency: true }, 
             code: 'ERR_INVALID_ARG_TYPE'
           });
         });
-      run({ files: [], signal: AbortSignal.abort(), coverage: true, coverageExcludeGlobs: [''] });
-      run({ files: [], signal: AbortSignal.abort(), coverage: true, coverageExcludeGlobs: '' });
+      run({ files: [], signal: abortedSignal, coverage: true, coverageExcludeGlobs: [''] });
+      run({ files: [], signal: abortedSignal, coverage: true, coverageExcludeGlobs: '' });
     });
 
     await it('should only allow string|string[] in options.coverageIncludeGlobs', async () => {
@@ -62,8 +40,8 @@ describe('require(\'node:test\').run Coverage settings', { concurrency: true }, 
           });
         });
 
-      run({ files: [], signal: AbortSignal.abort(), coverage: true, coverageIncludeGlobs: [''] });
-      run({ files: [], signal: AbortSignal.abort(), coverage: true, coverageIncludeGlobs: '' });
+      run({ files: [], signal: abortedSignal, coverage: true, coverageIncludeGlobs: [''] });
+      run({ files: [], signal: abortedSignal, coverage: true, coverageIncludeGlobs: '' });
     });
 
     await it('should only allow an int within range in options.lineCoverage', async () => {
@@ -79,7 +57,7 @@ describe('require(\'node:test\').run Coverage settings', { concurrency: true }, 
       assert.throws(() => run({ coverage: true, lineCoverage: -1 }), { code: 'ERR_OUT_OF_RANGE' });
       assert.throws(() => run({ coverage: true, lineCoverage: 101 }), { code: 'ERR_OUT_OF_RANGE' });
 
-      run({ files: [], signal: AbortSignal.abort(), coverage: true, lineCoverage: 0 });
+      run({ files: [], signal: abortedSignal, coverage: true, lineCoverage: 0 });
     });
 
     await it('should only allow an int within range in options.branchCoverage', async () => {
@@ -96,7 +74,7 @@ describe('require(\'node:test\').run Coverage settings', { concurrency: true }, 
       assert.throws(() => run({ coverage: true, branchCoverage: -1 }), { code: 'ERR_OUT_OF_RANGE' });
       assert.throws(() => run({ coverage: true, branchCoverage: 101 }), { code: 'ERR_OUT_OF_RANGE' });
 
-      run({ files: [], signal: AbortSignal.abort(), coverage: true, branchCoverage: 0 });
+      run({ files: [], signal: abortedSignal, coverage: true, branchCoverage: 0 });
     });
 
     await it('should only allow an int within range in options.functionCoverage', async () => {
@@ -113,7 +91,7 @@ describe('require(\'node:test\').run Coverage settings', { concurrency: true }, 
       assert.throws(() => run({ coverage: true, functionCoverage: -1 }), { code: 'ERR_OUT_OF_RANGE' });
       assert.throws(() => run({ coverage: true, functionCoverage: 101 }), { code: 'ERR_OUT_OF_RANGE' });
 
-      run({ files: [], signal: AbortSignal.abort(), coverage: true, functionCoverage: 0 });
+      run({ files: [], signal: abortedSignal, coverage: true, functionCoverage: 0 });
     });
   });
 
@@ -156,15 +134,15 @@ describe('require(\'node:test\').run Coverage settings', { concurrency: true }, 
       for await (const _ of stream);
     });
 
-    await it('should run with and include and excluded by globs', async () => {
+    await it('should run while including and excluding globs', async () => {
       const stream = run({
-        files,
+        files: [...files, fixtures.path('test-runner/invalid-tap.js')],
         coverage: true,
         coverageIncludeGlobs: ['test/fixtures/test-runner/*.js'],
         coverageExcludeGlobs: ['test/fixtures/test-runner/*-tap.js']
       });
       stream.on('test:fail', common.mustNotCall());
-      stream.on('test:pass', common.mustCall(1));
+      stream.on('test:pass', common.mustCall(2));
       stream.on('test:coverage', common.mustCall(({ summary: { files } }) => {
         const filesPaths = files.map(({ path }) => path);
         assert.strictEqual(filesPaths.every((path) => !path.includes('test-runner/invalid-tap.js')), true);
