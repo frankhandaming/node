@@ -3432,7 +3432,7 @@ void BindingData::LegacyMainResolve(const FunctionCallbackInfo<Value>& args) {
   }
 
   THROW_ERR_MODULE_NOT_FOUND(isolate,
-                      "No package entry point defined for package"
+                             "No package entry point defined for package"
                              " %s imported from %s",
                              *utf8_package_json_url,
                              *module_base);
