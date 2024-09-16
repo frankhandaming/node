@@ -5,7 +5,7 @@ const common = require('../common');
 const { getDirents, getDirent } = require('internal/fs/utils');
 const assert = require('assert');
 const { internalBinding } = require('internal/test/binding');
-const { UV_DIRENT_UNKNOWN } = internalBinding('constants').fs;
+const { UV_DIRENT_UNKNOWN, UV_DIRENT_FILE } = internalBinding('constants').fs;
 const fs = require('fs');
 
 const tmpdir = require('../common/tmpdir');
@@ -62,6 +62,38 @@ const filename = 'foo';
           'The "path" argument must be of type string or an ' +
           'instance of Buffer. Received type number (42)',
         ].join(''));
+    },
+    ));
+}
+{
+  // Intentional error in lstat
+  let path = '';
+  if (common.isWindows) {
+    path = 'c:\\dev\\null\\does\\not\\exist';
+  } else {
+    path = '/dev/null/does/not/exist';
+  }
+  let full_path = path;
+  if (common.isWindows) {
+    full_path = path + '\\' + filename;
+  } else {
+    full_path = path + '/' + filename;
+  }
+
+  const errmsg_enotdir =
+    'ENOTDIR: not a directory, ' +
+    `lstat '${full_path}'`;
+  const errmsg_enoent =
+    'ENOENT: no such file or directory, ' +
+    `lstat '${full_path}'`;
+
+  getDirents(
+    Buffer.from(path),
+    [[Buffer.from(filename)], [UV_DIRENT_UNKNOWN]],
+    common.mustCall((err) => {
+      assert.match(
+        err.message, new RegExp(`^${errmsg_enotdir}|${errmsg_enoent}$`)
+      );
     },
     ));
 }
@@ -122,6 +154,51 @@ const filename = 'foo';
           'The "path" argument must be of type string or an ' +
           'instance of Buffer. Received type number (42)',
         ].join(''));
+    },
+    ));
+}
+{
+  // When type != UV_DIRENT_UNKNOWN
+  getDirent(
+    tmpdir.path,
+    filename,
+    UV_DIRENT_FILE,
+    common.mustCall((err, dirent) => {
+      assert.strictEqual(err, null);
+      assert.strictEqual(dirent.name, filename);
+    },
+    ));
+}
+{
+  // Intentional error in lstat
+  let path = '';
+  if (common.isWindows) {
+    path = 'c:\\dev\\null\\does\\not\\exist';
+  } else {
+    path = '/dev/null/does/not/exist';
+  }
+  let full_path = path;
+  if (common.isWindows) {
+    full_path = path + '\\' + filename;
+  } else {
+    full_path = path + '/' + filename;
+  }
+
+  const errmsg_enotdir =
+    'ENOTDIR: not a directory, ' +
+    `lstat '${full_path}'`;
+  const errmsg_enoent =
+    'ENOENT: no such file or directory, ' +
+    `lstat '${full_path}'`;
+
+  getDirent(
+    path,
+    filename,
+    UV_DIRENT_UNKNOWN,
+    common.mustCall((err) => {
+      assert.match(
+        err.message, new RegExp(`^${errmsg_enotdir}|${errmsg_enoent}$`)
+      );
     },
     ));
 }
