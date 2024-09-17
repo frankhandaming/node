@@ -332,10 +332,14 @@ test('execute a TypeScript file with union types', async () => {
     fixtures.path('typescript/ts/test-union-types.ts'),
   ]);
 
+
   strictEqual(result.stderr, '');
-  strictEqual(result.stdout,  "{ name: 'Hello, TypeScript!'"+
-    " }\n{ role: 'admin', permission: 'all' }\n{\n  foo: 'Testing"+
-    " Partial Type',\n  bar: 42,\n  zoo: true,\n  metadata: undefined\n}\n");
+  strictEqual(result.stdout,
+    "{" +
+     " name: 'Hello, TypeScript!' }\n" +
+     "{ role: 'admin', permission: 'all' }\n" +
+     "{\n  foo: 'Testing Partial Type',\n  bar: 42,\n  zoo: true,\n  metadata: undefined\n" +
+    "}\n");
   strictEqual(result.code, 0);
 });
 
