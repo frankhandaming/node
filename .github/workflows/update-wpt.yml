@@ -1,0 +1,82 @@
+name: WPT update
+
+on:
+  schedule:
+    # Run once a week at 12:00 AM UTC on Sunday.
+    - cron: 0 0 * * *
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wpt-subsystem-update:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        subsystem:
+          - eventsource
+          - fetch
+          - websockets
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Generate bot token
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Retrieve GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Update WPT for subsystem ${{ matrix.subsystem }}
+        run: |
+          git node wpt update --subsystem=${{ matrix.subsystem }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Run WPT tests
+        run: |
+          git node wpt run --subsystem=${{ matrix.subsystem }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Handle test failures and success
+        run: |
+          if [[ "$(git status --porcelain)" != "" ]]; then
+            git config --global user.name "${{steps.app-token.outputs.app-slug}}[bot]"
+            git config --global user.email "${{steps.get-user-id.outputs.user-id}}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+            git checkout -b update-wpt-${{ matrix.subsystem }}
+            git add .
+            if git diff --quiet; then
+              echo "No changes to commit for ${{ matrix.subsystem }}."
+            else
+              git commit -m "test: update WPT for ${{ matrix.subsystem }} to ${{ env.NEW_VERSION }}"
+              gh auth setup-git
+              git push origin update-wpt-${{ matrix.subsystem }} -fu --no-verify
+              echo "createPR=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "WPT update for ${{ matrix.subsystem }} failed. Opening an issue to track."
+            gh issue create --title "WPT update failed for ${{ matrix.subsystem }}" --body "The WPT update for ${{ matrix.subsystem }} failed during testing. This may require manual intervention. Please track the status of this issue and update the tests as needed."
+          fi
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Open a PR for the subsystem update
+        if: steps.push-changes.outputs.createPR
+        continue-on-error: true
+        run: |
+          gh pr create --head update-wpt-${{ matrix.subsystem }} \
+          --title "test: update WPT for ${{ matrix.subsystem }} to ${{ env.NEW_VERSION }}" \
+          --body "This is an automated update of the WPT for ${{ matrix.subsystem }} to ${{ env.NEW_VERSION }}."
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
