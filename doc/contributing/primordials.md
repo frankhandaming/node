@@ -113,6 +113,7 @@ performance of code in Node.js.
 
 * Methods that mutate the internal state of arrays:
   * `ArrayPrototypePush`
+  * `ArrayPrototypePushApply`: also fails with a RangeError on large arrays
   * `ArrayPrototypePop`
   * `ArrayPrototypeShift`
   * `ArrayPrototypeUnshift`
