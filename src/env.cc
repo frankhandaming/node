@@ -847,14 +847,12 @@ Environment::Environment(IsolateData* isolate_data,
     }
   }
 
-  // We are supposed to call builtin_loader_.SetEagerCompile() in
-  // snapshot mode here because it's beneficial to compile built-ins
-  // loaded in the snapshot eagerly and include the code of inner functions
-  // that are likely to be used by user since they are part of the core
-  // startup. But this requires us to start the coverage collections
-  // before Environment/Context creation which is not currently possible.
-  // TODO(joyeecheung): refactor V8ProfilerConnection classes to parse
-  // JSON without v8 and lift this restriction.
+  // Compile builtins eagerly when building the snapshot so that inner functions
+  // of essential builtins that are loaded in the snapshot can have faster first
+  // invocation.
+  if (isolate_data->is_building_snapshot()) {
+    builtin_loader()->SetEagerCompile();
+  }
 
   // We'll be creating new objects so make sure we've entered the context.
   HandleScope handle_scope(isolate);
@@ -1143,7 +1141,7 @@ CompileCacheEnableResult Environment::EnableCompileCache(
       compile_cache_handler_ = std::move(handler);
       AtExit(
           [](void* env) {
-            static_cast<Environment*>(env)->compile_cache_handler()->Persist();
+            static_cast<Environment*>(env)->FlushCompileCache();
           },
           this);
     }
@@ -1158,6 +1156,13 @@ CompileCacheEnableResult Environment::EnableCompileCache(
     result.cache_directory = compile_cache_handler_->cache_dir();
   }
   return result;
+}
+
+void Environment::FlushCompileCache() {
+  if (!compile_cache_handler_ || compile_cache_handler_->cache_dir().empty()) {
+    return;
+  }
+  compile_cache_handler_->Persist();
 }
 
 void Environment::ExitEnv(StopFlags::Flags flags) {
